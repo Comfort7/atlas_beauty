@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: var(--font-manrope), sans-serif;
+    @apply bg-surface text-on-surface;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-noto-serif), serif;
+  }
+}
+
+@layer utilities {
+  .glass-nav {
+    background: rgba(250, 249, 252, 0.8);
+    backdrop-filter: blur(20px);
+  }
+}
