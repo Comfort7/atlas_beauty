@@ -1,8 +1,9 @@
 import { Resend } from "resend";
 
-if (!process.env.RESEND_API_KEY) {
-  throw new Error("RESEND_API_KEY is not set");
-}
+/** Null when RESEND_API_KEY is unset (e.g. Vercel build or dev without email). */
+export const resend: Resend | null = process.env.RESEND_API_KEY
+  ? new Resend(process.env.RESEND_API_KEY)
+  : null;
 
-export const resend = new Resend(process.env.RESEND_API_KEY);
-export const EMAIL_FROM = process.env.EMAIL_FROM || "Atlas Beauty <noreply@atlasbeauty.com>";
+export const EMAIL_FROM =
+  process.env.EMAIL_FROM || "Atlas Beauty <noreply@atlasbeauty.com>";

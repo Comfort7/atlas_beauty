@@ -1,9 +1,17 @@
 import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
-import { NotFoundError } from "@/lib/errors";
+import { AppError, NotFoundError } from "@/lib/errors";
 
 export const paymentService = {
   async createCheckoutSession(orderId: string) {
+    if (!stripe) {
+      throw new AppError(
+        503,
+        "Payments are not configured (missing STRIPE_SECRET_KEY)",
+        "PAYMENT_UNAVAILABLE"
+      );
+    }
+
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: {
@@ -89,6 +97,14 @@ export const paymentService = {
   },
 
   async issueRefund(orderId: string, reason?: string) {
+    if (!stripe) {
+      throw new AppError(
+        503,
+        "Payments are not configured (missing STRIPE_SECRET_KEY)",
+        "PAYMENT_UNAVAILABLE"
+      );
+    }
+
     const order = await prisma.order.findUnique({
       where: { id: orderId },
     });
