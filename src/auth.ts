@@ -3,9 +3,14 @@ import authConfig from "./auth.config";
 import { prisma } from "@/lib/prisma";
 import { Role } from "@prisma/client";
 
+/** Prefer AUTH_SECRET; support legacy NEXTAUTH_SECRET so Vercel env names still work. */
+const authSecret =
+  process.env.AUTH_SECRET?.trim() || process.env.NEXTAUTH_SECRET?.trim();
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
-  secret: process.env.AUTH_SECRET,
+  // Do not pass `secret: undefined` — it blocks Auth.js from reading NEXTAUTH_SECRET from the environment.
+  ...(authSecret ? { secret: authSecret } : {}),
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
