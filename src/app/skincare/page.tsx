@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import ShopByBrand from "@/components/ShopByBrand";
 
 const products = [
   {
@@ -70,12 +71,19 @@ const products = [
   },
 ];
 
-const categories = [
-  { label: "All Products", count: 142, active: true },
-  { label: "Cleansers", count: 18 },
-  { label: "Serums & Oils", count: 34 },
-  { label: "Moisturizers", count: 22 },
-  { label: "Eye Care", count: 12 },
+const categories: {
+  label: string;
+  count: number;
+  href?: string;
+  active?: boolean;
+}[] = [
+  { label: "All Products", count: 142, active: true, href: "/skincare" },
+  { label: "Cleansers", count: 18, href: "/shop?category=cleansers" },
+  { label: "Serums & Oils", count: 34, href: "/shop?category=serums-oils" },
+  { label: "Moisturizers", count: 22, href: "/shop?category=moisturizers" },
+  { label: "Face", count: 26, href: "/shop?category=face" },
+  { label: "Eyes", count: 12, href: "/shop?category=eyes" },
+  { label: "Lips", count: 9, href: "/shop?category=lips" },
 ];
 
 const concerns = ["Hydration", "Anti-Aging", "Blemishes", "Brightness", "Sensitivity"];
@@ -115,19 +123,31 @@ export default function SkincareePage() {
             <div>
               <h3 className="font-headline text-lg mb-6 text-on-surface">Category</h3>
               <ul className="space-y-4 text-sm">
-                {categories.map((cat) => (
-                  <li
-                    key={cat.label}
-                    className="flex justify-between items-center cursor-pointer hover:text-primary transition-colors"
-                  >
-                    <span className={cat.active ? "text-primary font-bold" : "text-on-surface-variant"}>
-                      {cat.label}
-                    </span>
-                    <span className="text-xs text-on-surface-variant opacity-50">{cat.count}</span>
-                  </li>
-                ))}
+                {categories.map((cat) => {
+                  const inner = (
+                    <>
+                      <span className={cat.active ? "text-primary font-bold" : "text-on-surface-variant"}>
+                        {cat.label}
+                      </span>
+                      <span className="text-xs text-on-surface-variant opacity-50">{cat.count}</span>
+                    </>
+                  );
+                  return (
+                    <li key={cat.label} className="flex justify-between items-center hover:text-primary transition-colors">
+                      {cat.href ? (
+                        <Link href={cat.href} className="flex w-full justify-between items-center">
+                          {inner}
+                        </Link>
+                      ) : (
+                        <div className="flex w-full justify-between items-center cursor-pointer">{inner}</div>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
+
+            <ShopByBrand />
 
             {/* Skin Concern */}
             <div>

@@ -7,6 +7,7 @@ import { useState } from "react";
 const navLinks = [
   { label: "Collections", href: "/" },
   { label: "Skincare", href: "/skincare" },
+  { label: "Body Care", href: "/bodycare" },
   { label: "Fragrance", href: "/fragrance" },
   { label: "Journal", href: "/journal" },
   { label: "About", href: "/about" },
@@ -15,6 +16,7 @@ const navLinks = [
 const mobileLinks = [
   { label: "Home", href: "/", icon: "home" },
   { label: "Skincare", href: "/skincare", icon: "spa" },
+  { label: "Body Care", href: "/bodycare", icon: "water_drop" },
   { label: "Fragrance", href: "/fragrance", icon: "local_florist" },
   { label: "Journal", href: "/journal", icon: "article" },
   { label: "About Us", href: "/about", icon: "info" },
