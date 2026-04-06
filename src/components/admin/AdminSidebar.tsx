@@ -31,7 +31,16 @@ const navItems: NavItem[] = [
       { label: "Write New Post", href: "/admin/blog/new" },
     ],
   },
-  { icon: "local_offer", label: "Coupons", href: "/admin/coupons" },
+  {
+    icon: "local_offer",
+    label: "Coupons",
+    href: "/admin/coupons",
+    children: [
+      { label: "Coupons & banners", href: "/admin/coupons" },
+      { label: "Add coupon", href: "/admin/coupons/new" },
+      { label: "Add banner", href: "/admin/coupons/banners/new" },
+    ],
+  },
 ];
 
 export default function AdminSidebar() {

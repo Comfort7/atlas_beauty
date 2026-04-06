@@ -43,6 +43,13 @@ export default async function InventoryPage() {
       </header>
 
       <main className="flex-1 p-8 space-y-6 overflow-y-auto">
+        <p className="text-sm text-on-surface-variant max-w-3xl leading-relaxed">
+          Each row is a <strong className="text-on-surface">product variant</strong> (size, shade, etc.).{" "}
+          <strong className="text-on-surface">Stock</strong> is units on hand;{" "}
+          <strong className="text-on-surface">reserved</strong> are held for unpaid checkouts;{" "}
+          <strong className="text-on-surface">available</strong> is stock minus reserved. Update quantity to sync what you have in the warehouse.
+        </p>
+
         {/* Summary Cards */}
         <div className="grid grid-cols-3 gap-4">
           {[
@@ -94,9 +101,8 @@ export default async function InventoryPage() {
                       <tr key={item.id} className="hover:bg-surface-container-low/50 transition-colors">
                         <td className="px-5 py-3">
                           <Link
-                            href={`/products/${item.variant.product.slug}`}
+                            href={`/products/${item.variant.product.slug}?from=admin`}
                             className="text-sm font-bold text-on-surface hover:text-primary transition-colors"
-                            target="_blank"
                           >
                             {item.variant.product.name}
                           </Link>

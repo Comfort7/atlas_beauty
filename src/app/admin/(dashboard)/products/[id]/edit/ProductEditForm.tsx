@@ -3,21 +3,35 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import ProductImageReorder from "../../ProductImageReorder";
 
-export default function NewProductPage() {
+export type EditProductInitial = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  shortDescription: string | null;
+  basePrice: number;
+  compareAtPrice: number | null;
+  categoryId: string;
+  ingredients: string | null;
+  isFeatured: boolean;
+  isActive: boolean;
+  tags: string[];
+  variantName: string;
+  variantSku: string;
+  variantPrice: number;
+  initialStock: number;
+  mainImageUrl: string;
+  mainImageAlt: string;
+  images: { id: string; position: number; url: string }[];
+};
+
+export default function ProductEditForm({ initial }: { initial: EditProductInitial }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-
-  function generateSlug(name: string) {
-    return name
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, "")
-      .replace(/\s+/g, "-")
-      .replace(/-+/g, "-")
-      .trim();
-  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -31,13 +45,17 @@ export default function NewProductPage() {
       name: get("name"),
       slug: get("slug"),
       description: get("description"),
-      shortDescription: get("shortDescription"),
+      shortDescription: get("shortDescription") || null,
       basePrice: get("basePrice"),
       compareAtPrice: get("compareAtPrice") || null,
       categoryId: get("categoryId"),
       ingredients: get("ingredients") || null,
       isFeatured: (form.elements.namedItem("isFeatured") as HTMLInputElement).checked,
-      tags: get("tags").split(",").map((t) => t.trim()).filter(Boolean),
+      isActive: (form.elements.namedItem("isActive") as HTMLInputElement).checked,
+      tags: get("tags")
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean),
       variantName: get("variantName"),
       variantSku: get("variantSku"),
       variantPrice: get("variantPrice"),
@@ -47,17 +65,20 @@ export default function NewProductPage() {
     };
 
     try {
-      const res = await fetch("/api/v1/admin/products", {
-        method: "POST",
+      const res = await fetch(`/api/v1/admin/products/${initial.id}`, {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error?.message || "Failed to create product");
+      if (!res.ok) throw new Error(body.error?.message || "Failed to update product");
 
       setSuccess(true);
-      setTimeout(() => router.push("/admin/products"), 1500);
+      setTimeout(() => {
+        router.push("/admin/products");
+        router.refresh();
+      }, 800);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setLoading(false);
@@ -68,11 +89,9 @@ export default function NewProductPage() {
     return (
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="text-center">
-          <span className="material-symbols-outlined text-5xl text-primary block mb-4">
-            check_circle
-          </span>
-          <h2 className="font-headline text-2xl text-on-surface mb-2">Product Created!</h2>
-          <p className="text-on-surface-variant text-sm">Redirecting to products list…</p>
+          <span className="material-symbols-outlined text-5xl text-primary block mb-4">check_circle</span>
+          <h2 className="font-headline text-2xl text-on-surface mb-2">Product updated</h2>
+          <p className="text-on-surface-variant text-sm">Redirecting…</p>
         </div>
       </div>
     );
@@ -85,8 +104,8 @@ export default function NewProductPage() {
           <span className="material-symbols-outlined text-sm">arrow_back</span>
         </Link>
         <div>
-          <h1 className="font-headline text-2xl text-on-surface">Add New Product</h1>
-          <p className="text-xs text-on-surface-variant uppercase tracking-widest mt-0.5">Fill in the details below</p>
+          <h1 className="font-headline text-2xl text-on-surface">Edit Product</h1>
+          <p className="text-xs text-on-surface-variant uppercase tracking-widest mt-0.5">{initial.name}</p>
         </div>
       </header>
 
@@ -99,21 +118,18 @@ export default function NewProductPage() {
             </div>
           )}
 
-          {/* Basic Info */}
           <div className="bg-surface rounded-xl border border-outline-variant/20 p-6 space-y-5">
             <h2 className="font-headline text-lg text-on-surface border-b border-outline-variant/20 pb-3">Basic Information</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-1.5">
-                <label className="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant font-label">Product Name *</label>
+                <label className="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant font-label">
+                  Product Name *
+                </label>
                 <input
                   name="name"
                   required
-                  placeholder="e.g. Celestial Reset Serum"
-                  onChange={(e) => {
-                    const slugEl = e.currentTarget.form?.elements.namedItem("slug") as HTMLInputElement;
-                    if (slugEl) slugEl.value = generateSlug(e.target.value);
-                  }}
+                  defaultValue={initial.name}
                   className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:border-primary transition-colors"
                 />
               </div>
@@ -122,7 +138,7 @@ export default function NewProductPage() {
                 <input
                   name="slug"
                   required
-                  placeholder="auto-generated from name"
+                  defaultValue={initial.slug}
                   className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:border-primary transition-colors font-mono"
                 />
               </div>
@@ -132,7 +148,7 @@ export default function NewProductPage() {
               <label className="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant font-label">Short Description</label>
               <input
                 name="shortDescription"
-                placeholder="One-line summary shown on product cards"
+                defaultValue={initial.shortDescription ?? ""}
                 className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:border-primary transition-colors"
               />
             </div>
@@ -143,7 +159,7 @@ export default function NewProductPage() {
                 name="description"
                 required
                 rows={4}
-                placeholder="Detailed product description..."
+                defaultValue={initial.description}
                 className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:border-primary transition-colors resize-none"
               />
             </div>
@@ -153,15 +169,19 @@ export default function NewProductPage() {
               <input
                 name="categoryId"
                 required
-                placeholder="Paste the category ID from your database"
+                defaultValue={initial.categoryId}
                 className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:border-primary transition-colors font-mono"
               />
-              <p className="text-[10px] text-on-surface-variant">Find category IDs in Neon Console → Tables → categories.</p>
             </div>
 
             <label className="flex items-center gap-3 cursor-pointer select-none">
-              <input type="checkbox" name="isFeatured" className="w-4 h-4 accent-primary" />
-              <span className="text-sm text-on-surface">Mark as featured product (shown on homepage)</span>
+              <input type="checkbox" name="isFeatured" defaultChecked={initial.isFeatured} className="w-4 h-4 accent-primary" />
+              <span className="text-sm text-on-surface">Featured on homepage</span>
+            </label>
+
+            <label className="flex items-center gap-3 cursor-pointer select-none">
+              <input type="checkbox" name="isActive" defaultChecked={initial.isActive} className="w-4 h-4 accent-primary" />
+              <span className="text-sm text-on-surface">Active on storefront</span>
             </label>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2 border-t border-outline-variant/20">
@@ -172,25 +192,20 @@ export default function NewProductPage() {
                 <input
                   name="imageUrl"
                   type="url"
-                  placeholder="https://… (HTTPS image for product gallery)"
+                  defaultValue={initial.mainImageUrl}
+                  placeholder="https://…"
                   className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:border-primary transition-colors font-mono"
                 />
-                <p className="text-[10px] text-on-surface-variant">Shown on the storefront product page and in listings that use images.</p>
               </div>
               <div className="space-y-1.5 md:col-span-2">
-                <label className="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant font-label">
-                  Image alt text (optional)
-                </label>
-                <input
-                  name="imageAlt"
-                  placeholder="Short description for accessibility"
-                  className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:border-primary transition-colors"
-                />
+                <label className="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant font-label">Image alt text</label>
+                <input name="imageAlt" defaultValue={initial.mainImageAlt} className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:border-primary transition-colors" />
               </div>
             </div>
+
+            <ProductImageReorder productId={initial.id} images={initial.images} />
           </div>
 
-          {/* Pricing */}
           <div className="bg-surface rounded-xl border border-outline-variant/20 p-6 space-y-5">
             <h2 className="font-headline text-lg text-on-surface border-b border-outline-variant/20 pb-3">Pricing</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -204,13 +219,13 @@ export default function NewProductPage() {
                     step="0.01"
                     min="0"
                     required
-                    placeholder="0.00"
+                    defaultValue={initial.basePrice}
                     className="w-full bg-surface-container-low border border-outline-variant rounded-lg pl-7 pr-4 py-2.5 text-sm text-on-surface focus:outline-none focus:border-primary transition-colors"
                   />
                 </div>
               </div>
               <div className="space-y-1.5">
-                <label className="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant font-label">Compare At Price (optional)</label>
+                <label className="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant font-label">Compare At Price</label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">$</span>
                   <input
@@ -218,7 +233,7 @@ export default function NewProductPage() {
                     type="number"
                     step="0.01"
                     min="0"
-                    placeholder="0.00"
+                    defaultValue={initial.compareAtPrice ?? ""}
                     className="w-full bg-surface-container-low border border-outline-variant rounded-lg pl-7 pr-4 py-2.5 text-sm text-on-surface focus:outline-none focus:border-primary transition-colors"
                   />
                 </div>
@@ -226,30 +241,19 @@ export default function NewProductPage() {
             </div>
           </div>
 
-          {/* First Variant */}
           <div className="bg-surface rounded-xl border border-outline-variant/20 p-6 space-y-5">
             <div className="border-b border-outline-variant/20 pb-3">
-              <h2 className="font-headline text-lg text-on-surface">Default Variant & Stock</h2>
-              <p className="text-xs text-on-surface-variant mt-1">Every product needs at least one variant (e.g. "30ml", "Standard").</p>
+              <h2 className="font-headline text-lg text-on-surface">Primary variant & stock</h2>
+              <p className="text-xs text-on-surface-variant mt-1">Updates the first variant created for this product.</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               <div className="space-y-1.5">
                 <label className="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant font-label">Variant Name *</label>
-                <input
-                  name="variantName"
-                  required
-                  placeholder="e.g. 30ml"
-                  className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:border-primary transition-colors"
-                />
+                <input name="variantName" required defaultValue={initial.variantName} className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:border-primary transition-colors" />
               </div>
               <div className="space-y-1.5">
                 <label className="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant font-label">SKU *</label>
-                <input
-                  name="variantSku"
-                  required
-                  placeholder="e.g. AB-SRM-30ML"
-                  className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:border-primary transition-colors font-mono"
-                />
+                <input name="variantSku" required defaultValue={initial.variantSku} className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:border-primary transition-colors font-mono" />
               </div>
               <div className="space-y-1.5">
                 <label className="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant font-label">Variant Price (USD) *</label>
@@ -261,48 +265,42 @@ export default function NewProductPage() {
                     step="0.01"
                     min="0"
                     required
-                    placeholder="0.00"
+                    defaultValue={initial.variantPrice}
                     className="w-full bg-surface-container-low border border-outline-variant rounded-lg pl-7 pr-4 py-2.5 text-sm text-on-surface focus:outline-none focus:border-primary transition-colors"
                   />
                 </div>
               </div>
             </div>
             <div className="space-y-1.5 max-w-xs">
-              <label className="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant font-label">Initial Stock Quantity *</label>
+              <label className="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant font-label">Stock quantity *</label>
               <input
                 name="initialStock"
                 type="number"
                 min="0"
                 required
-                defaultValue="0"
+                defaultValue={initial.initialStock}
                 className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:border-primary transition-colors"
               />
             </div>
           </div>
 
-          {/* Extra */}
           <div className="bg-surface rounded-xl border border-outline-variant/20 p-6 space-y-5">
-            <h2 className="font-headline text-lg text-on-surface border-b border-outline-variant/20 pb-3">Additional Details</h2>
+            <h2 className="font-headline text-lg text-on-surface border-b border-outline-variant/20 pb-3">Additional</h2>
             <div className="space-y-1.5">
-              <label className="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant font-label">Ingredients / Formula</label>
-                <textarea
+              <label className="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant font-label">Ingredients</label>
+              <textarea
                 name="ingredients"
                 rows={3}
-                placeholder="Aqua, Niacinamide, Hyaluronic Acid..."
+                defaultValue={initial.ingredients ?? ""}
                 className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:border-primary transition-colors resize-none"
               />
             </div>
             <div className="space-y-1.5">
               <label className="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant font-label">Tags (comma separated)</label>
-              <input
-                name="tags"
-                placeholder="e.g. serum, hydrating, vitamin-c"
-                className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:border-primary transition-colors"
-              />
+              <input name="tags" defaultValue={initial.tags.join(", ")} className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:border-primary transition-colors" />
             </div>
           </div>
 
-          {/* Actions */}
           <div className="flex items-center justify-between pb-8">
             <Link href="/admin/products" className="text-sm text-on-surface-variant hover:text-on-surface transition-colors">
               Cancel
@@ -315,12 +313,12 @@ export default function NewProductPage() {
               {loading ? (
                 <>
                   <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
-                  Creating…
+                  Saving…
                 </>
               ) : (
                 <>
-                  <span className="material-symbols-outlined text-sm">add_box</span>
-                  Create Product
+                  <span className="material-symbols-outlined text-sm">save</span>
+                  Save changes
                 </>
               )}
             </button>

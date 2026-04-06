@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import DeleteProductButton from "./DeleteProductButton";
 
 async function getProducts() {
   return prisma.product.findMany({
@@ -154,24 +155,27 @@ export default async function AdminProductsPage() {
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
                             <Link
-                              href={`/products/${product.slug}`}
+                              href={`/products/${product.slug}?from=admin`}
                               className="text-on-surface-variant hover:text-primary transition-colors"
-                              title="View"
-                              target="_blank"
+                              title="View storefront"
                             >
-                              <span className="material-symbols-outlined text-sm">
-                                open_in_new
-                              </span>
+                              <span className="material-symbols-outlined text-sm">visibility</span>
                             </Link>
                             <Link
-                              href={`/admin/inventory`}
+                              href={`/admin/products/${product.id}/edit`}
                               className="text-on-surface-variant hover:text-primary transition-colors"
-                              title="Manage Stock"
+                              title="Edit product"
                             >
-                              <span className="material-symbols-outlined text-sm">
-                                warehouse
-                              </span>
+                              <span className="material-symbols-outlined text-sm">edit</span>
                             </Link>
+                            <Link
+                              href="/admin/inventory"
+                              className="text-on-surface-variant hover:text-primary transition-colors"
+                              title="Inventory & stock"
+                            >
+                              <span className="material-symbols-outlined text-sm">warehouse</span>
+                            </Link>
+                            <DeleteProductButton productId={product.id} />
                           </div>
                         </td>
                       </tr>

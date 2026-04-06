@@ -96,6 +96,7 @@ export const productService = {
     const product = await prisma.product.findFirst({
       where: {
         OR: [{ id: idOrSlug }, { slug: idOrSlug }],
+        isActive: true,
       },
       select: {
         ...productSelect,

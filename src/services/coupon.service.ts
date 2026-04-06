@@ -86,6 +86,7 @@ export const couponService = {
   async update(
     id: string,
     data: Partial<{
+      code: string;
       description: string;
       type: "PERCENTAGE" | "FIXED" | "FREE_SHIPPING";
       value: number;
@@ -98,6 +99,9 @@ export const couponService = {
     }>
   ) {
     const updateData: Prisma.CouponUpdateInput = { ...data };
+    if (data.code !== undefined) {
+      updateData.code = data.code.toUpperCase();
+    }
     if (data.value !== undefined) {
       updateData.value = new Prisma.Decimal(data.value);
     }

@@ -123,14 +123,20 @@ export default async function AdminBlogPage() {
                         <div className="flex items-center gap-3">
                           {post.status === "PUBLISHED" && (
                             <Link
-                              href={`/journal/${post.slug}`}
+                              href={`/journal/${post.slug}?from=admin`}
                               className="text-on-surface-variant hover:text-primary transition-colors"
-                              title="View live"
-                              target="_blank"
+                              title="View on journal"
                             >
-                              <span className="material-symbols-outlined text-sm">open_in_new</span>
+                              <span className="material-symbols-outlined text-sm">visibility</span>
                             </Link>
                           )}
+                          <Link
+                            href={`/admin/blog/${post.id}/edit`}
+                            className="text-on-surface-variant hover:text-primary transition-colors"
+                            title="Edit post"
+                          >
+                            <span className="material-symbols-outlined text-sm">edit</span>
+                          </Link>
                           <DeletePostButton postId={post.id} />
                         </div>
                       </td>

@@ -19,6 +19,9 @@ const createProductSchema = z.object({
   variantSku: z.string().min(1),
   variantPrice: z.coerce.number().positive(),
   initialStock: z.coerce.number().int().min(0).default(0),
+  /** Optional main product image URL. Stored in product_images. Validated in handler. */
+  imageUrl: z.string().max(2048).optional().nullable(),
+  imageAlt: z.string().max(200).optional().nullable(),
 });
 
 export const POST = withAdmin(async (request) => {
@@ -36,6 +39,20 @@ export const POST = withAdmin(async (request) => {
 
     const d = parsed.data;
 
+    const imageUrl = d.imageUrl?.trim() || "";
+    if (imageUrl) {
+      try {
+        const u = new URL(imageUrl);
+        if (u.protocol !== "http:" && u.protocol !== "https:") {
+          return errorResponse("Image URL must be http or https", 400, "VALIDATION_ERROR");
+        }
+      } catch {
+        return errorResponse("Invalid image URL", 400, "VALIDATION_ERROR");
+      }
+    }
+
+    const publicId = imageUrl ? `external-${d.slug}-${Date.now()}` : "";
+
     const product = await prisma.product.create({
       data: {
         name: d.name,
@@ -48,6 +65,18 @@ export const POST = withAdmin(async (request) => {
         ingredients: d.ingredients ?? undefined,
         isFeatured: d.isFeatured,
         tags: d.tags,
+        ...(imageUrl
+          ? {
+              images: {
+                create: {
+                  url: imageUrl,
+                  publicId: publicId,
+                  altText: d.imageAlt?.trim() || d.name,
+                  position: 0,
+                },
+              },
+            }
+          : {}),
         variants: {
           create: {
             name: d.variantName,
@@ -65,6 +94,7 @@ export const POST = withAdmin(async (request) => {
       },
       include: {
         variants: { include: { inventory: true } },
+        images: true,
       },
     });
 

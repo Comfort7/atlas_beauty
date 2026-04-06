@@ -3,6 +3,8 @@
 import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import PromoBannerStrip from "@/components/PromoBannerStrip";
+import { PromoBannerPlacement } from "@prisma/client";
 
 const cartItems = [
   {
@@ -34,6 +36,10 @@ export default function CartPage() {
     <>
       <Navbar />
       <main className="pt-32 pb-24 px-8 max-w-7xl mx-auto min-h-screen">
+        <div className="mb-10 space-y-8">
+          <PromoBannerStrip placement={PromoBannerPlacement.CART} />
+          <PromoBannerStrip placement={PromoBannerPlacement.COUPON} />
+        </div>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
           {/* Left: Items */}
           <div className="lg:col-span-7 space-y-12">

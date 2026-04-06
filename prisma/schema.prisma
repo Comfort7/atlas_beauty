@@ -41,6 +41,12 @@ enum DiscountType {
   FREE_SHIPPING
 }
 
+enum PromoBannerPlacement {
+  HOME
+  CART
+  COUPON
+}
+
 enum ReviewStatus {
   PENDING
   APPROVED
@@ -373,6 +379,27 @@ model Coupon {
 
   @@index([code])
   @@map("coupons")
+}
+
+// ─── PROMO BANNERS (carousel / static strips) ────────────
+
+model PromoBanner {
+  id         String               @id @default(cuid())
+  title      String
+  subtitle   String?
+  imageUrl   String?
+  linkUrl    String?
+  linkLabel  String?
+  sortOrder  Int                  @default(0)
+  isActive   Boolean              @default(true)
+  /** Ms between slides when multiple; 0 = manual only */
+  autoplayMs Int                  @default(6000)
+  placement  PromoBannerPlacement @default(COUPON)
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
+
+  @@index([placement, isActive, sortOrder])
+  @@map("promo_banners")
 }
 
 // ─── BLOG POSTS ──────────────────────────────────────────

@@ -1,35 +1,24 @@
+import Image from "next/image";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { prisma } from "@/lib/prisma";
 
-const articles = [
-  {
-    slug: "architecture-of-radiance",
-    tag: "Science & Art",
-    title: "The Architecture of Radiance: A Guide to Cold Water Therapy",
-    excerpt: "In an era of hyper-synthetic innovation, we return to the elemental. Discover how cold exposure reconstructs skin vitality from the core.",
-    readTime: "8 min",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAX8NchmzbbX_FuQ-vY-WZsgNS6KGGRWSdOM9wnFSwhUDItfVCXsJKdaDnCqDYtE1bsgukd4WpIJ8LlqM4Dm1fpflf_CzEthy_UcJVotI0Z4OvNtCwr0ubeOsdKnwLDB-Yrf8kYVySKhJOfgSSLjrkVRyIJNQ78sQti-b7nqRY55AODdBAz3FuHJxFYBdM7-MqoeJ3sS9vTYV_be9vtWmFG6naS41KSsfQgT2shT6ZpPhQvRFjFUGc9ZLz5GI2MPrdJZEoNtaSmh9Xt",
-  },
-  {
-    slug: "molecular-structure-of-serums",
-    tag: "Science & Art",
-    title: "The Molecular Structure of Serums",
-    excerpt: "Understanding how architectural density in formulations affects ingredient absorption and long-term efficacy.",
-    readTime: "6 min",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuA24X0w8mN-fIJ7F8ZAxQe1bXxyf7Ci0Kayt9jkbAaDkd-p355yZip0z5ylqA4Yt0pm5wUdGgDLYu99N_mB7ou6xPDKKx6O7VN-v_6lDqzu_-DovdNvT56zqM82xk_DIkMPCGHiEkyMig_R6GUmoVC-p6iTYKsW8DUvSyHSDGjB124vYz0YVGBQnbIiCnr76fgnv2ae9JVhph52CrW-0qog7u18VxjW_ufD1mCcVvoMvlJVwJM-XEUeQg18KOLxbbrih7Uoe09JUJ_4",
-  },
-  {
-    slug: "architectural-spaces-for-wellness",
-    tag: "Curation",
-    title: "Architectural Spaces for Wellness",
-    excerpt: "Designing your personal environment to enhance the efficacy of your skincare rituals and daily wellbeing practice.",
-    readTime: "5 min",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAv0FjguIprOun6vwWiATOBTnItxpLGY4Jv0oTCP1Ql54b-ycfyFGV-kn8fMNfSXfGKZ_KnggAeEWg7FPf10J7WrwUriBNTcN-3DOexIMokqxHIXmovX_xfXktFKSGEQRBV7VyllmBe2m44TxOPNKmNhWJ0iCw2qd4dcJSk_xKDQQa013ktitVm4YQH46ncoW6D0AtEsou1hRz1XZo7ZaLDDJ9en_s_1Jnq1B9BqjNQ3RoDqaWy_QJV-jpL4075OrcVX0ZjCKyYVv-7",
-  },
-];
+export const dynamic = "force-dynamic";
 
-export default function JournalPage() {
+function estimateReadMinutes(content: string): number {
+  const words = content.trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.round(words / 200));
+}
+
+export default async function JournalPage() {
+  const posts = await prisma.post.findMany({
+    where: { status: "PUBLISHED" },
+    orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
+    take: 12,
+    include: { author: { select: { name: true } } },
+  });
+
   return (
     <>
       <Navbar />
@@ -42,32 +31,54 @@ export default function JournalPage() {
           </p>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-          {articles.map((article, i) => (
-            <Link key={article.slug} href={`/journal/${article.slug}`} className="group block">
-              <div
-                className="relative overflow-hidden mb-6 bg-surface-container-low"
-                style={{ aspectRatio: i === 0 ? "16/10" : "4/5" }}
-              >
-                <img
-                  src={article.image}
-                  alt={article.title}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-              </div>
-              <span className="font-label text-[10px] uppercase tracking-widest text-primary font-bold mb-3 block">
-                {article.tag} · {article.readTime} read
-              </span>
-              <h2 className="font-headline text-2xl md:text-3xl leading-tight group-hover:text-primary transition-colors mb-3">
-                {article.title}
-              </h2>
-              <p className="font-body text-sm text-on-surface-variant leading-relaxed">{article.excerpt}</p>
-              <span className="mt-6 inline-block font-bold text-xs uppercase border-b border-primary text-primary pb-1">
-                Read Article
-              </span>
+        {posts.length === 0 ? (
+          <p className="text-center text-on-surface-variant font-body">
+            New stories are on the way. Check back soon, or browse{" "}
+            <Link href="/skincare" className="text-primary underline underline-offset-4">
+              the shop
             </Link>
-          ))}
-        </div>
+            .
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+            {posts.map((post, i) => {
+              const tag = post.tags[0] ?? "Journal";
+              const read = estimateReadMinutes(post.content);
+              return (
+                <Link key={post.id} href={`/journal/${post.slug}`} className="group block">
+                  <div
+                    className="relative overflow-hidden mb-6 bg-surface-container-low"
+                    style={{ aspectRatio: i === 0 ? "16/10" : "4/5" }}
+                  >
+                    {post.coverImage ? (
+                      <Image
+                        src={post.coverImage}
+                        alt={post.title}
+                        fill
+                        unoptimized
+                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 bg-gradient-to-br from-surface-container-high to-primary-container/20" />
+                    )}
+                  </div>
+                  <span className="font-label text-[10px] uppercase tracking-widest text-primary font-bold mb-3 block">
+                    {tag} · {read} min read
+                  </span>
+                  <h2 className="font-headline text-2xl md:text-3xl leading-tight group-hover:text-primary transition-colors mb-3">
+                    {post.title}
+                  </h2>
+                  <p className="font-body text-sm text-on-surface-variant leading-relaxed">
+                    {post.excerpt ?? post.content.slice(0, 180).replace(/\n/g, " ") + (post.content.length > 180 ? "…" : "")}
+                  </p>
+                  <span className="mt-6 inline-block font-bold text-xs uppercase border-b border-primary text-primary pb-1">
+                    Read Article
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </main>
       <Footer />
     </>
