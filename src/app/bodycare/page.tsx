@@ -13,10 +13,14 @@ type SortKey = "newest" | "price_asc" | "price_desc";
 type FilterKey = "all" | "lotions" | "scrubs" | "washes";
 
 function productPrice(product: {
-  variants: Array<{ price: number | string }>;
-  basePrice: number | string;
+  variants: Array<{ price: unknown }>;
+  basePrice: unknown;
 }) {
-  return Number(product.variants[0]?.price ?? product.basePrice);
+  const value = product.variants[0]?.price ?? product.basePrice;
+  if (value && typeof value === "object" && "toNumber" in value && typeof value.toNumber === "function") {
+    return value.toNumber();
+  }
+  return Number(value ?? 0);
 }
 
 function productMatchesFilter(product: { name: string }, filter: FilterKey) {

@@ -15,10 +15,14 @@ type SortKey = "newest" | "price_asc" | "price_desc";
 type FilterKey = "all" | "treatments" | "lip-care" | "moisturizers";
 
 function productPrice(product: {
-  variants: Array<{ price: number | string }>;
-  basePrice: number | string;
+  variants: Array<{ price: unknown }>;
+  basePrice: unknown;
 }) {
-  return Number(product.variants[0]?.price ?? product.basePrice);
+  const value = product.variants[0]?.price ?? product.basePrice;
+  if (value && typeof value === "object" && "toNumber" in value && typeof value.toNumber === "function") {
+    return value.toNumber();
+  }
+  return Number(value ?? 0);
 }
 
 function productMatchesFilter(
