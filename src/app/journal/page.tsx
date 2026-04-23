@@ -3,6 +3,7 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { prisma } from "@/lib/prisma";
+import { brandJournalEntries } from "@/lib/brand-content";
 
 export const dynamic = "force-dynamic";
 
@@ -12,12 +13,33 @@ function estimateReadMinutes(content: string): number {
 }
 
 export default async function JournalPage() {
-  const posts = await prisma.post.findMany({
+  const dbPosts = await prisma.post.findMany({
     where: { status: "PUBLISHED" },
     orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
     take: 12,
     include: { author: { select: { name: true } } },
   });
+  const posts = [
+    ...brandJournalEntries.map((entry) => ({
+      id: `brand-${entry.slug}`,
+      slug: entry.slug,
+      title: entry.title,
+      excerpt: entry.excerpt,
+      content: entry.content,
+      coverImage: entry.coverImage,
+      tags: entry.tags,
+      publishedAt: new Date(entry.publishedAt),
+      createdAt: new Date(entry.publishedAt),
+      author: { name: `${entry.brand} Editorial` },
+    })),
+    ...dbPosts,
+  ]
+    .sort((a, b) => {
+      const aDate = a.publishedAt ?? a.createdAt;
+      const bDate = b.publishedAt ?? b.createdAt;
+      return bDate.getTime() - aDate.getTime();
+    })
+    .slice(0, 12);
 
   return (
     <>

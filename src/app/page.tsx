@@ -4,22 +4,14 @@ import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import DynamicPromoBannerZone from "@/components/DynamicPromoBannerZone";
 import { getHomepageFeaturedProducts } from "@/lib/homepage-layout";
-
-const partnerCategories = [
-  { name: "Body Care", image: "https://picsum.photos/seed/body-care/120/120", href: "/bodycare" },
-  { name: "Fragrance", image: "https://picsum.photos/seed/fragrance/120/120", href: "/fragrance" },
-  { name: "Skincare", image: "https://picsum.photos/seed/skincare/120/120", href: "/skincare" },
-  { name: "Lip Care", image: "https://picsum.photos/seed/lip-care/120/120", href: "/skincare" },
-  { name: "Body Scrub", image: "https://picsum.photos/seed/body-scrub/120/120", href: "/bodycare" },
-  { name: "Body Wash", image: "https://picsum.photos/seed/body-wash/120/120", href: "/bodycare" },
-  { name: "Lotions", image: "https://picsum.photos/seed/lotions/120/120", href: "/bodycare" },
-  { name: "Seasonal Picks", image: "https://picsum.photos/seed/seasonal-picks/120/120", href: "/shop" },
-];
+import { resolveProductImageUrl } from "@/lib/product-image";
+import { brandJournalEntries, featuredBrands } from "@/lib/brand-content";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const featuredProducts = await getHomepageFeaturedProducts(8);
+  const journalHighlights = brandJournalEntries.slice(0, 3);
 
   return (
     <>
@@ -79,7 +71,7 @@ export default async function Home() {
               </Link>
             </div>
 
-            <div className="grid grid-cols-2 gap-5 md:grid-cols-5">
+            <div className="grid grid-cols-2 gap-5 md:grid-cols-4">
               {featuredProducts.map((product) => (
                 <Link
                   key={product.id}
@@ -88,11 +80,11 @@ export default async function Home() {
                 >
                   <div className="relative mb-4 aspect-[4/5] overflow-hidden rounded-xl border border-outline-variant/45 bg-surface-container-low">
                     <Image
-                      src={product.images[0]?.url || "/products/dove-vanilla-sugar.jpg"}
+                      src={resolveProductImageUrl(product)}
                       alt={product.name}
                       fill
                       className="object-cover transition duration-500 group-hover:scale-[1.03]"
-                      sizes="(max-width: 768px) 45vw, 20vw"
+                      sizes="(max-width: 768px) 45vw, (max-width: 1200px) 25vw, 22vw"
                     />
                     <div className="absolute inset-0 bg-secondary/10 opacity-0 transition group-hover:opacity-100" />
                   </div>
@@ -120,26 +112,70 @@ export default async function Home() {
             <p className="mb-5 font-body text-xs uppercase tracking-[0.28em] text-outline">
               Featured Brands
             </p>
-            <div className="marquee-track rounded-2xl bg-surface-container-lowest">
-              <div className="marquee-content">
-                {[...partnerCategories, ...partnerCategories].map((brand, index) => (
-                  <Link
-                    key={`${brand.name}-${index}`}
-                    href={brand.href}
-                    className="inline-flex min-w-[210px] items-center gap-3 rounded-full border border-outline-variant/30 bg-white px-4 py-2"
-                  >
-                    <img
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {featuredBrands.map((brand) => (
+                <Link
+                  key={brand.slug}
+                  href={brand.href}
+                  className="group overflow-hidden rounded-2xl border border-outline-variant/35 bg-surface-container-lowest"
+                >
+                  <div className="relative aspect-[4/3] overflow-hidden">
+                    <Image
                       src={brand.image}
-                      alt={`${brand.name} logo`}
-                      className="h-8 w-8 rounded-full border border-outline-variant/25 object-contain bg-white p-1"
-                      loading="lazy"
+                      alt={brand.name}
+                      fill
+                      className="object-cover transition duration-500 group-hover:scale-105"
+                      sizes="(max-width: 640px) 90vw, (max-width: 1024px) 44vw, 22vw"
                     />
-                    <span className="font-body text-sm font-semibold uppercase tracking-[0.18em] text-on-surface-variant">
-                      {brand.name}
-                    </span>
-                  </Link>
-                ))}
+                  </div>
+                  <div className="p-4">
+                    <h3 className="font-headline text-xl text-on-surface">{brand.name}</h3>
+                    <p className="mt-2 text-sm text-on-surface-variant">{brand.description}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-white px-6 py-16 md:px-12">
+          <div className="mx-auto max-w-7xl">
+            <div className="mb-8 flex items-end justify-between gap-4">
+              <div>
+                <p className="font-body text-xs uppercase tracking-[0.28em] text-outline">Journal</p>
+                <h2 className="mt-2 font-headline text-3xl text-on-surface md:text-4xl">
+                  Brand stories and care guides
+                </h2>
               </div>
+              <Link href="/journal" className="text-xs uppercase tracking-[0.2em] text-primary border-b border-primary pb-1">
+                View journal
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+              {journalHighlights.map((entry) => (
+                <Link
+                  key={entry.slug}
+                  href={`/journal/${entry.slug}`}
+                  className="group overflow-hidden rounded-2xl border border-outline-variant/35 bg-surface-container-lowest"
+                >
+                  <div className="relative aspect-[4/3] overflow-hidden">
+                    <Image
+                      src={entry.coverImage}
+                      alt={entry.title}
+                      fill
+                      className="object-cover transition duration-500 group-hover:scale-105"
+                      sizes="(max-width: 768px) 90vw, 30vw"
+                    />
+                  </div>
+                  <div className="p-5">
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-primary font-semibold">
+                      {entry.brand}
+                    </p>
+                    <h3 className="mt-2 font-headline text-2xl text-on-surface">{entry.title}</h3>
+                    <p className="mt-2 text-sm text-on-surface-variant">{entry.excerpt}</p>
+                  </div>
+                </Link>
+              ))}
             </div>
           </div>
         </section>

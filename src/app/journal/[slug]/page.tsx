@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AdminStorefrontBar from "@/components/AdminStorefrontBar";
 import { prisma } from "@/lib/prisma";
+import { brandJournalEntries, getBrandJournalBySlug } from "@/lib/brand-content";
 
 export const dynamic = "force-dynamic";
 
@@ -29,16 +30,58 @@ export default async function JournalArticlePage({
     where: { slug, status: "PUBLISHED" },
     include: { author: { select: { name: true, image: true } } },
   });
+  const brandPost = !post ? getBrandJournalBySlug(slug) : null;
 
-  if (!post) notFound();
+  if (!post && !brandPost) notFound();
 
-  const read = estimateReadMinutes(post.content);
+  const read = estimateReadMinutes(post?.content ?? brandPost?.content ?? "");
 
-  const related = await prisma.post.findMany({
-    where: { status: "PUBLISHED", id: { not: post.id } },
+  const relatedDb = await prisma.post.findMany({
+    where: { status: "PUBLISHED", ...(post ? { id: { not: post.id } } : {}) },
     orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
     take: 3,
   });
+  const relatedBrand = brandJournalEntries
+    .filter((entry) => entry.slug !== slug)
+    .slice(0, 3)
+    .map((entry) => ({
+      id: `brand-${entry.slug}`,
+      slug: entry.slug,
+      title: entry.title,
+      coverImage: entry.coverImage,
+      tags: entry.tags,
+    }));
+
+  const related = post
+    ? [
+        ...relatedDb.map((item) => ({
+          id: item.id,
+          slug: item.slug,
+          title: item.title,
+          coverImage: item.coverImage,
+          tags: item.tags,
+        })),
+        ...relatedBrand,
+      ].slice(0, 3)
+    : relatedBrand;
+
+  const active = post
+    ? {
+        title: post.title,
+        excerpt: post.excerpt,
+        tags: post.tags,
+        coverImage: post.coverImage,
+        content: post.content,
+        author: post.author,
+      }
+    : {
+        title: brandPost!.title,
+        excerpt: brandPost!.excerpt,
+        tags: brandPost!.tags,
+        coverImage: brandPost!.coverImage,
+        content: brandPost!.content,
+        author: { name: `${brandPost!.brand} Editorial`, image: null },
+      };
 
   return (
     <>
@@ -50,26 +93,26 @@ export default async function JournalArticlePage({
             <div className="lg:col-span-8">
               <div className="mb-8">
                 <span className="font-label text-xs uppercase tracking-[0.3em] text-primary font-bold">
-                  {post.tags[0] ?? "Journal"}
+                  {active.tags[0] ?? "Journal"}
                 </span>
               </div>
-              <h1 className="text-5xl lg:text-7xl leading-tight font-headline text-on-background mb-6">{post.title}</h1>
+              <h1 className="text-5xl lg:text-7xl leading-tight font-headline text-on-background mb-6">{active.title}</h1>
             </div>
             <div className="lg:col-span-4 pb-4">
-              {post.excerpt && (
+              {active.excerpt && (
                 <p className="font-body text-lg text-on-surface-variant leading-relaxed max-w-md lg:ml-auto lg:text-right">
-                  {post.excerpt}
+                  {active.excerpt}
                 </p>
               )}
             </div>
           </div>
         </header>
 
-        {post.coverImage && (
+        {active.coverImage && (
           <section className="w-full h-[min(60vh,600px)] relative overflow-hidden bg-primary-container">
             <Image
-              src={post.coverImage}
-              alt={post.title}
+              src={active.coverImage}
+              alt={active.title}
               fill
               unoptimized
               className="object-cover"
@@ -86,16 +129,16 @@ export default async function JournalArticlePage({
                 <h4 className="font-label text-xs uppercase tracking-widest text-primary font-bold">Author</h4>
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-full overflow-hidden bg-surface-container-high relative flex-shrink-0">
-                    {post.author.image ? (
-                      <Image src={post.author.image} alt="" fill unoptimized className="object-cover" />
+                    {active.author.image ? (
+                      <Image src={active.author.image} alt="" fill unoptimized className="object-cover" />
                     ) : (
                       <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-on-surface-variant">
-                        {post.author.name?.slice(0, 1) ?? "?"}
+                        {active.author.name?.slice(0, 1) ?? "?"}
                       </div>
                     )}
                   </div>
                   <div>
-                    <p className="font-headline font-bold text-sm">{post.author.name ?? "Atlas"}</p>
+                    <p className="font-headline font-bold text-sm">{active.author.name ?? "Atlas"}</p>
                   </div>
                 </div>
               </div>
@@ -105,11 +148,11 @@ export default async function JournalArticlePage({
                   {read} min{read !== 1 ? "s" : ""}
                 </p>
               </div>
-              {post.tags.length > 0 && (
+              {active.tags.length > 0 && (
                 <div className="space-y-3">
                   <h4 className="font-label text-xs uppercase tracking-widest text-primary font-bold">Topics</h4>
                   <div className="flex flex-wrap gap-2">
-                    {post.tags.map((t) => (
+                    {active.tags.map((t) => (
                       <span
                         key={t}
                         className="px-3 py-1 bg-surface-container text-[10px] uppercase font-bold tracking-wider rounded-full"
@@ -131,7 +174,7 @@ export default async function JournalArticlePage({
             [&_p]:mb-4 [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-4 [&_ol]:list-decimal [&_ol]:pl-6
             [&_a]:text-primary [&_a]:underline [&_strong]:text-on-surface"
           >
-            <ReactMarkdown>{post.content}</ReactMarkdown>
+            <ReactMarkdown>{active.content}</ReactMarkdown>
           </div>
         </article>
 
