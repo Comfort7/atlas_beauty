@@ -1,14 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+
+type CategoryNode = {
+  id: string;
+  name: string;
+  children?: CategoryNode[];
+};
 
 export default function NewProductPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [categories, setCategories] = useState<Array<{ id: string; label: string }>>([]);
 
   function generateSlug(name: string) {
     return name
@@ -63,6 +70,31 @@ export default function NewProductPage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    let mounted = true;
+    async function loadCategories() {
+      try {
+        const res = await fetch("/api/v1/categories", { cache: "no-store" });
+        const body = await res.json();
+        if (!res.ok) return;
+        const roots = (body.data || []) as CategoryNode[];
+        const out: Array<{ id: string; label: string }> = [];
+        const walk = (node: CategoryNode, prefix = "") => {
+          out.push({ id: node.id, label: `${prefix}${node.name}` });
+          (node.children || []).forEach((child) => walk(child, `${prefix}${node.name} / `));
+        };
+        roots.forEach((r) => walk(r));
+        if (mounted) setCategories(out);
+      } catch {
+        // Keep form usable even if categories fail to load.
+      }
+    }
+    void loadCategories();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   if (success) {
     return (
@@ -149,14 +181,25 @@ export default function NewProductPage() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant font-label">Category ID *</label>
-              <input
+              <label className="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant font-label">Category *</label>
+              <select
                 name="categoryId"
                 required
-                placeholder="Paste the category ID from your database"
-                className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:border-primary transition-colors font-mono"
-              />
-              <p className="text-[10px] text-on-surface-variant">Find category IDs in Neon Console → Tables → categories.</p>
+                defaultValue=""
+                className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:border-primary transition-colors"
+              >
+                <option value="" disabled>
+                  Select a category
+                </option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.label}
+                  </option>
+                ))}
+              </select>
+              <p className="text-[10px] text-on-surface-variant">
+                Only products in the right category will appear on its storefront page.
+              </p>
             </div>
 
             <label className="flex items-center gap-3 cursor-pointer select-none">

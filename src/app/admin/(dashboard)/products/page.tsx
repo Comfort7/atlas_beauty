@@ -11,7 +11,7 @@ async function getProducts() {
       variants: {
         include: { inventory: true },
       },
-      _count: { select: { reviews: true } },
+      _count: { select: { reviews: true, images: true } },
     },
   });
 }
@@ -99,6 +99,11 @@ export default async function AdminProductsPage() {
                               {product.brand?.name ?? "No brand"} · {product.variants.length} variant
                               {product.variants.length !== 1 ? "s" : ""}
                             </p>
+                            {product._count.images === 0 && (
+                              <span className="inline-flex mt-2 px-2 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full bg-error-container text-on-error-container">
+                                No image uploaded
+                              </span>
+                            )}
                           </div>
                         </td>
                         <td className="px-6 py-4 text-sm text-on-surface-variant">

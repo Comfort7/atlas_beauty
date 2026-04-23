@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import ProductImageReorder from "../../ProductImageReorder";
@@ -27,11 +27,43 @@ export type EditProductInitial = {
   images: { id: string; position: number; url: string }[];
 };
 
+type CategoryNode = {
+  id: string;
+  name: string;
+  children?: CategoryNode[];
+};
+
 export default function ProductEditForm({ initial }: { initial: EditProductInitial }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [categories, setCategories] = useState<Array<{ id: string; label: string }>>([]);
+
+  useEffect(() => {
+    let mounted = true;
+    async function loadCategories() {
+      try {
+        const res = await fetch("/api/v1/categories", { cache: "no-store" });
+        const body = await res.json();
+        if (!res.ok) return;
+        const roots = (body.data || []) as CategoryNode[];
+        const out: Array<{ id: string; label: string }> = [];
+        const walk = (node: CategoryNode, prefix = "") => {
+          out.push({ id: node.id, label: `${prefix}${node.name}` });
+          (node.children || []).forEach((child) => walk(child, `${prefix}${node.name} / `));
+        };
+        roots.forEach((r) => walk(r));
+        if (mounted) setCategories(out);
+      } catch {
+        // Keep edit form usable if categories fail to load.
+      }
+    }
+    void loadCategories();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -165,13 +197,22 @@ export default function ProductEditForm({ initial }: { initial: EditProductIniti
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant font-label">Category ID *</label>
-              <input
+              <label className="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant font-label">Category *</label>
+              <select
                 name="categoryId"
                 required
                 defaultValue={initial.categoryId}
-                className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:border-primary transition-colors font-mono"
-              />
+                className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:border-primary transition-colors"
+              >
+                <option value="" disabled>
+                  Select a category
+                </option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.label}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <label className="flex items-center gap-3 cursor-pointer select-none">

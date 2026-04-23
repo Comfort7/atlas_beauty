@@ -57,7 +57,7 @@ export default function Navbar() {
             </div>
           </div>
 
-          {/* Right: Search, Admin, Person, Cart, Mobile toggle */}
+          {/* Right: Search, Person, Cart, Mobile toggle */}
           <div className="flex items-center space-x-5">
             {/* Search — desktop only */}
             <div className="hidden lg:block relative">
@@ -70,15 +70,6 @@ export default function Navbar() {
                 className="bg-surface-container-high border-none text-sm py-2 pl-10 pr-4 focus:ring-0 w-48 border-b-2 border-primary font-body text-on-surface placeholder:text-on-surface-variant/40"
               />
             </div>
-
-            {/* Admin — subtle shield icon, desktop only */}
-            <Link
-              href="/admin/login"
-              title="Admin Portal"
-              className="hidden md:flex items-center hover:text-primary transition-colors text-on-surface-variant"
-            >
-              <span className="material-symbols-outlined text-[20px]">admin_panel_settings</span>
-            </Link>
 
             {/* Account */}
             <button className="hover:text-primary transition-colors text-on-surface-variant">
@@ -145,16 +136,7 @@ export default function Navbar() {
               })}
             </nav>
 
-            {/* Admin link at bottom of mobile menu */}
             <div className="px-4 py-6 border-t border-outline-variant/20 space-y-2">
-              <Link
-                href="/admin/login"
-                onClick={() => setMenuOpen(false)}
-                className="flex items-center gap-4 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-primary transition-all"
-              >
-                <span className="material-symbols-outlined text-sm">admin_panel_settings</span>
-                <span className="font-body text-sm">Admin Portal</span>
-              </Link>
               <p className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant/50 px-4">
                 © 2024 Atlas Beauty
               </p>

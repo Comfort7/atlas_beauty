@@ -10,7 +10,7 @@ import { brandSchema } from "./schema";
 export async function GET() {
   try {
     const brands = await prisma.brand.findMany({
-      include: { _count: { select: { products: true } } },
+      select: { id: true, name: true, slug: true },
       orderBy: { name: "asc" },
     });
     return successResponse(brands);

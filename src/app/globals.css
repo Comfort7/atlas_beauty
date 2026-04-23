@@ -20,4 +20,30 @@
     background: rgba(250, 249, 252, 0.8);
     backdrop-filter: blur(20px);
   }
+
+  .marquee-track {
+    overflow: hidden;
+    white-space: nowrap;
+    border-top: 1px solid rgba(164, 180, 194, 0.2);
+    border-bottom: 1px solid rgba(164, 180, 194, 0.2);
+    padding: 1.4rem 0;
+  }
+
+  .marquee-content {
+    display: inline-flex;
+    align-items: center;
+    gap: 5rem;
+    padding-inline: 2rem;
+    min-width: 200%;
+    animation: atlas-marquee 28s linear infinite;
+  }
+}
+
+@keyframes atlas-marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
 }

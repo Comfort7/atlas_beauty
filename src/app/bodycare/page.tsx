@@ -3,63 +3,127 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ShopByBrand from "@/components/ShopByBrand";
+import DynamicPromoBannerZone from "@/components/DynamicPromoBannerZone";
+import { prisma } from "@/lib/prisma";
+import { getCategorySlugsForRoute } from "@/lib/homepage-layout";
 
-const products = [
-  {
-    slug: "celestial-reset-serum",
-    name: "Celestial Reset Serum",
-    subtitle: "Hyaluronic Acid & B5 Complex",
-    price: "$84.00",
-    size: "30ml",
-    badge: "Best Seller",
-    badgeStyle: "bg-primary text-on-primary",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuBwyEoNbCtbtSxq-lqKzaB8SB-rfNMBB24_llV4bQlCBlMwgvrNwVP_HPqNuVJjnSR86iURC1fgA12MOBYzxm9kVDfppH5kbCMx65TZ7KFVMblIgHI1xmswdO1wJgG2UiQ2cyo_-jtt76laaKSwm5tPDjnCGO8Fii4NS22KovD0WCwOSyPsW9SSbqLnRnYQI0MVZs7jHs5Qduev_qiQQTR7LHgv-wgww2sfrYKkJtea-ysEcC55NtOd1QkZ3zKH5EPkMY-AIcW58rRH",
-    alt: "Minimalist glass serum bottle on a light blue marble block",
-  },
-  {
-    slug: "tidal-essence-toner",
-    name: "Tidal Essence Toner",
-    subtitle: "Marine Algae & Sea Silt",
-    price: "$62.00",
-    size: "150ml",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuB0_h6MieZ7JbGkffyd0NX11zEmhKvzpKeIAD2mLAW4d5aLJi0_KazkHQa4yeyMjKBeYIcIGBG9t0Vug1dBGve4YDmD1phQkTq4fkn6WxyKGnt1ZX8MvQc-_hS_M2ZNMzaPZk8oGtK26nrjok6KpailgEf3i8UixpV2iA2KAMBe2GvWUqesQGpOiKzVoZjn7xZzwp0zSM36Xs38zHj1l26EzIeLf7Uw_LG_acnwn3V8Jd95uAq6VM5nl-rZBurveAqCTg6cJEJ9qs41",
-    alt: "Tall frosted glass toner bottle on a reflective black surface",
-  },
-  {
-    slug: "architectural-day-cream",
-    name: "Architectural Day Cream",
-    subtitle: "Ceramides & Peptides",
-    price: "$110.00",
-    size: "50ml",
-    badge: "New Arrival",
-    badgeStyle: "bg-secondary-container text-on-secondary-container",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuBjurLL2RcXTHp8FjbCUMhVLa23Bh5UfCvvHjsRZE7tgok1QSpM1EOY6zrs4mD_jc8-nqrI0JhVJBvF36ox7Mw3JgT8BL6IHSUSQmD7t6C189squY1xswb2su3hshiN6LGIY2ZJ9Op9IujnzdNwoEaPfcjdMtBvBl3JfwdL03YaUCWGYmN870WFFBlnvmkmFwgn4PA8C3VCHg1XlT68biIr7SsnBCZgLrvOIvEcHsApboOVHPh1TuEN7OGYgDeP5uOcAIu38868b5Km",
-    alt: "White cream jar on a concrete sculptural base with dramatic shadows",
-  },
-];
+export const dynamic = "force-dynamic";
 
-const bodyCategories: { label: string; count: number; href: string; active?: boolean }[] = [
-  { label: "All body care", count: 86, active: true, href: "/bodycare" },
-  { label: "Lotion", count: 22, href: "/shop?category=body-lotion" },
-  { label: "Scrub", count: 14, href: "/shop?category=body-scrub" },
-  { label: "Soap", count: 11, href: "/shop?category=body-soap" },
-  { label: "Wash", count: 18, href: "/shop?category=body-wash" },
-  { label: "Gel", count: 21, href: "/shop?category=body-gel" },
-];
+type SortKey = "newest" | "price_asc" | "price_desc";
+type FilterKey = "all" | "lotions" | "scrubs" | "washes";
 
-export default function BodyCarePage() {
+function productPrice(product: {
+  variants: Array<{ price: number | string }>;
+  basePrice: number | string;
+}) {
+  return Number(product.variants[0]?.price ?? product.basePrice);
+}
+
+function productMatchesFilter(product: { name: string }, filter: FilterKey) {
+  const text = product.name.toLowerCase();
+  if (filter === "lotions") return /lotion|cream|moistur/.test(text);
+  if (filter === "scrubs") return /scrub|polish|gommage/.test(text);
+  if (filter === "washes") return /wash|soap|bar/.test(text);
+  return true;
+}
+
+function listingHref(base: string, filter: FilterKey, sort: SortKey) {
+  const q = new URLSearchParams();
+  if (filter !== "all") q.set("filter", filter);
+  if (sort !== "newest") q.set("sort", sort);
+  const suffix = q.toString();
+  return suffix ? `${base}?${suffix}` : base;
+}
+
+export default async function BodyCarePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ filter?: string; sort?: string }>;
+}) {
+  const params = await searchParams;
+  const activeFilter: FilterKey =
+    params.filter === "lotions" || params.filter === "scrubs" || params.filter === "washes"
+      ? params.filter
+      : "all";
+  const activeSort: SortKey =
+    params.sort === "price_asc" || params.sort === "price_desc" ? params.sort : "newest";
+
+  const mappedCategorySlugs = await getCategorySlugsForRoute("/bodycare");
+
+  const products = await prisma.product.findMany({
+    where: {
+      isActive: true,
+      category:
+        mappedCategorySlugs.length > 0
+          ? { slug: { in: mappedCategorySlugs } }
+          : {
+              OR: [
+                { slug: { contains: "body" } },
+                { name: { contains: "body", mode: "insensitive" } },
+              ],
+            },
+    },
+    orderBy: [{ isFeatured: "desc" }, { createdAt: "desc" }],
+    include: {
+      images: { orderBy: { position: "asc" }, take: 1 },
+      variants: {
+        where: { isActive: true },
+        orderBy: { createdAt: "asc" },
+        take: 1,
+      },
+      category: { select: { name: true } },
+    },
+  });
+
+  const bodyCategories: { key: FilterKey; label: string; count: number; href: string; active?: boolean }[] = [
+    {
+      key: "all",
+      label: "All body care",
+      count: products.length,
+      active: activeFilter === "all",
+      href: listingHref("/bodycare", "all", activeSort),
+    },
+    {
+      key: "lotions",
+      label: "Lotions",
+      count: products.filter((p) => /lotion|cream|moistur/i.test(p.name)).length,
+      active: activeFilter === "lotions",
+      href: listingHref("/bodycare", "lotions", activeSort),
+    },
+    {
+      key: "scrubs",
+      label: "Scrubs",
+      count: products.filter((p) => /scrub|polish|gommage/i.test(p.name)).length,
+      active: activeFilter === "scrubs",
+      href: listingHref("/bodycare", "scrubs", activeSort),
+    },
+    {
+      key: "washes",
+      label: "Washes",
+      count: products.filter((p) => /wash|soap|bar/i.test(p.name)).length,
+      active: activeFilter === "washes",
+      href: listingHref("/bodycare", "washes", activeSort),
+    },
+  ];
+  const filteredProducts = products.filter((p) => productMatchesFilter(p, activeFilter));
+  const visibleProducts = [...filteredProducts].sort((a, b) => {
+    if (activeSort === "price_asc") return productPrice(a) - productPrice(b);
+    if (activeSort === "price_desc") return productPrice(b) - productPrice(a);
+    return 0;
+  });
+
   return (
     <>
       <Navbar />
       <main className="pt-24 pb-16 max-w-7xl mx-auto px-8">
+        <div className="mb-8">
+          <DynamicPromoBannerZone zone="category.top" />
+        </div>
         <header className="mb-16">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div className="max-w-2xl">
               <h1 className="font-headline text-5xl md:text-7xl text-on-surface tracking-tighter leading-tight">
-                Body<br />Care.
+                Body Care
               </h1>
               <p className="mt-6 text-on-surface-variant font-body text-lg leading-relaxed">
                 Texture, scent, and ritual—body formulas engineered with the same Atlas standard as our
@@ -67,7 +131,30 @@ export default function BodyCarePage() {
               </p>
             </div>
             <div className="flex items-center gap-4 text-xs font-label uppercase tracking-widest text-on-surface-variant">
-              <span>Showing curated preview</span>
+              <span>Showing {visibleProducts.length} products</span>
+              <div className="h-px w-12 bg-outline-variant" />
+              <div className="flex items-center gap-2">
+                <Link
+                  href={listingHref("/bodycare", activeFilter, "newest")}
+                  className={`font-bold ${activeSort === "newest" ? "text-primary" : "text-on-surface-variant"}`}
+                >
+                  Newest
+                </Link>
+                <span>·</span>
+                <Link
+                  href={listingHref("/bodycare", activeFilter, "price_asc")}
+                  className={`font-bold ${activeSort === "price_asc" ? "text-primary" : "text-on-surface-variant"}`}
+                >
+                  Price Low
+                </Link>
+                <span>·</span>
+                <Link
+                  href={listingHref("/bodycare", activeFilter, "price_desc")}
+                  className={`font-bold ${activeSort === "price_desc" ? "text-primary" : "text-on-surface-variant"}`}
+                >
+                  Price High
+                </Link>
+              </div>
             </div>
           </div>
         </header>
@@ -117,36 +204,44 @@ export default function BodyCarePage() {
 
           <div className="flex-grow">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
-              {products.map((product) => (
-                <Link href={`/products/${product.slug}`} key={product.slug} className="group block">
+              {visibleProducts.map((product) => (
+                <Link href={`/products/${product.slug}`} key={product.id} className="group block">
                   <div className="relative aspect-[3/4] bg-surface-container-low overflow-hidden mb-4">
                     <Image
-                      src={product.image}
-                      alt={product.alt}
+                      src={product.images[0]?.url || "/products/dove-vanilla-sugar.jpg"}
+                      alt={product.images[0]?.altText || product.name}
                       fill
-                      className="object-cover mix-blend-multiply transition-transform duration-700 group-hover:scale-105"
+                      sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 30vw"
+                      className="object-cover transition-transform duration-700 group-hover:scale-105"
                     />
-                    {product.badge && (
+                    {product.isFeatured && (
                       <div
-                        className={`absolute top-4 left-4 px-3 py-1 text-[10px] font-bold tracking-widest uppercase ${product.badgeStyle}`}
+                        className="absolute top-4 left-4 px-3 py-1 text-[10px] font-bold tracking-widest uppercase bg-primary text-on-primary"
                       >
-                        {product.badge}
+                        Featured
                       </div>
                     )}
                   </div>
                   <h4 className="font-headline text-xl text-on-surface mb-1">{product.name}</h4>
-                  <p className="text-on-surface-variant text-sm mb-3">{product.subtitle}</p>
+                  <p className="text-on-surface-variant text-sm mb-3">
+                    {product.shortDescription || product.category.name}
+                  </p>
                   <div className="flex items-center gap-3">
-                    <span className="text-primary font-bold">{product.price}</span>
+                    <span className="text-primary font-bold">
+                      ${Number(product.variants[0]?.price ?? product.basePrice).toFixed(2)}
+                    </span>
                     <span className="h-px w-4 bg-outline-variant" />
                     <span className="text-[10px] uppercase tracking-tighter text-on-surface-variant font-bold">
-                      {product.size}
+                      {product.variants[0]?.name || "Standard"}
                     </span>
                   </div>
                 </Link>
               ))}
             </div>
           </div>
+        </div>
+        <div className="mt-12">
+          <DynamicPromoBannerZone zone="category.bottom" />
         </div>
       </main>
       <Footer />

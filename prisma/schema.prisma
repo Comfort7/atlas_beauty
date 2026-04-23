@@ -402,6 +402,7 @@ model PromoBanner {
   @@map("promo_banners")
 }
 
+
 // ─── BLOG POSTS ──────────────────────────────────────────
 
 model Post {

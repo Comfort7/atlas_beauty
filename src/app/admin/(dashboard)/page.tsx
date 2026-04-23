@@ -373,6 +373,12 @@ export default async function AdminDashboardPage() {
                     color: "bg-surface-container text-on-surface",
                     href: "/admin/orders",
                   },
+                  {
+                    icon: "dashboard_customize",
+                    label: "Layout",
+                    color: "bg-surface-container text-on-surface",
+                    href: "/admin/layout",
+                  },
                 ].map((action) => (
                   <Link
                     key={action.label}

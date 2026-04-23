@@ -4,8 +4,10 @@ import { notFound } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AdminStorefrontBar from "@/components/AdminStorefrontBar";
+import DynamicPromoBannerZone from "@/components/DynamicPromoBannerZone";
 import { productService } from "@/services/product.service";
 import { NotFoundError } from "@/lib/errors";
+import { resolveProductImageUrl } from "@/lib/product-image";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +43,10 @@ export default async function ProductDetailPage({
   const images = [...product.images].sort((a, b) => a.position - b.position);
   const main = images[0];
   const thumbs = images.slice(1, 3);
+  const mainImageUrl = resolveProductImageUrl({
+    images: product.images,
+    category: { slug: product.category?.slug },
+  });
   const primaryVariant = product.variants[0];
   const displayPrice = primaryVariant?.price ?? product.basePrice;
   const compareAt = primaryVariant?.compareAtPrice ?? product.compareAtPrice;
@@ -51,6 +57,9 @@ export default async function ProductDetailPage({
       <Navbar />
       {adminBack && <AdminStorefrontBar backHref="/admin/products" backLabel="Back to products" />}
       <main className={`pb-20 ${adminBack ? "pt-40" : "pt-24"}`}>
+        <div className="max-w-7xl mx-auto px-8 mb-8">
+          <DynamicPromoBannerZone zone="product.top" />
+        </div>
         <div className="max-w-7xl mx-auto px-8 mb-8">
           <nav className="flex items-center space-x-2 text-[10px] uppercase tracking-[0.2em] text-on-surface-variant font-bold">
             <Link href="/skincare" className="hover:text-primary transition-colors">
@@ -68,20 +77,14 @@ export default async function ProductDetailPage({
         <section className="max-w-7xl mx-auto px-8 grid grid-cols-1 md:grid-cols-12 gap-12">
           <div className="md:col-span-7 flex flex-col space-y-4">
             <div className="bg-surface-container-low aspect-[4/5] overflow-hidden relative">
-              {main ? (
-                <Image
-                  src={main.url}
-                  alt={main.altText || product.name}
-                  fill
-                  unoptimized
-                  className="object-cover hover:scale-105 transition-transform duration-700"
-                  priority
-                />
-              ) : (
-                <div className="absolute inset-0 bg-gradient-to-br from-surface-container-high via-surface-container to-primary-container/30 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-6xl text-on-surface-variant/40">image</span>
-                </div>
-              )}
+              <Image
+                src={mainImageUrl}
+                alt={main?.altText || product.name}
+                fill
+                sizes="(max-width: 768px) 92vw, 58vw"
+                className="object-cover hover:scale-105 transition-transform duration-700"
+                priority
+              />
             </div>
             {thumbs.length > 0 && (
               <div className="grid grid-cols-2 gap-4">
@@ -91,7 +94,7 @@ export default async function ProductDetailPage({
                       src={img.url}
                       alt={img.altText || product.name}
                       fill
-                      unoptimized
+                      sizes="(max-width: 768px) 44vw, 20vw"
                       className="object-cover"
                     />
                   </div>
@@ -169,6 +172,9 @@ export default async function ProductDetailPage({
             )}
           </div>
         </section>
+        <div className="max-w-7xl mx-auto px-8 mt-12">
+          <DynamicPromoBannerZone zone="product.bottom" />
+        </div>
       </main>
       <Footer />
     </>

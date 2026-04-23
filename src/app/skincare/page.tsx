@@ -3,115 +3,173 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ShopByBrand from "@/components/ShopByBrand";
+import DynamicPromoBannerZone from "@/components/DynamicPromoBannerZone";
+import { prisma } from "@/lib/prisma";
+import { getCategorySlugsForRoute } from "@/lib/homepage-layout";
 
-const products = [
-  {
-    slug: "celestial-reset-serum",
-    name: "Celestial Reset Serum",
-    subtitle: "Hyaluronic Acid & B5 Complex",
-    price: "$84.00",
-    size: "30ml",
-    badge: "Best Seller",
-    badgeStyle: "bg-primary text-on-primary",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuBwyEoNbCtbtSxq-lqKzaB8SB-rfNMBB24_llV4bQlCBlMwgvrNwVP_HPqNuVJjnSR86iURC1fgA12MOBYzxm9kVDfppH5kbCMx65TZ7KFVMblIgHI1xmswdO1wJgG2UiQ2cyo_-jtt76laaKSwm5tPDjnCGO8Fii4NS22KovD0WCwOSyPsW9SSbqLnRnYQI0MVZs7jHs5Qduev_qiQQTR7LHgv-wgww2sfrYKkJtea-ysEcC55NtOd1QkZ3zKH5EPkMY-AIcW58rRH",
-    alt: "Minimalist glass serum bottle on a light blue marble block",
-  },
-  {
-    slug: "tidal-essence-toner",
-    name: "Tidal Essence Toner",
-    subtitle: "Marine Algae & Sea Silt",
-    price: "$62.00",
-    size: "150ml",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuB0_h6MieZ7JbGkffyd0NX11zEmhKvzpKeIAD2mLAW4d5aLJi0_KazkHQa4yeyMjKBeYIcIGBG9t0Vug1dBGve4YDmD1phQkTq4fkn6WxyKGnt1ZX8MvQc-_hS_M2ZNMzaPZk8oGtK26nrjok6KpailgEf3i8UixpV2iA2KAMBe2GvWUqesQGpOiKzVoZjn7xZzwp0zSM36Xs38zHj1l26EzIeLf7Uw_LG_acnwn3V8Jd95uAq6VM5nl-rZBurveAqCTg6cJEJ9qs41",
-    alt: "Tall frosted glass toner bottle on a reflective black surface",
-  },
-  {
-    slug: "architectural-day-cream",
-    name: "Architectural Day Cream",
-    subtitle: "Ceramides & Peptides",
-    price: "$110.00",
-    size: "50ml",
-    badge: "New Arrival",
-    badgeStyle: "bg-secondary-container text-on-secondary-container",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuBjurLL2RcXTHp8FjbCUMhVLa23Bh5UfCvvHjsRZE7tgok1QSpM1EOY6zrs4mD_jc8-nqrI0JhVJBvF36ox7Mw3JgT8BL6IHSUSQmD7t6C189squY1xswb2su3hshiN6LGIY2ZJ9Op9IujnzdNwoEaPfcjdMtBvBl3JfwdL03YaUCWGYmN870WFFBlnvmkmFwgn4PA8C3VCHg1XlT68biIr7SsnBCZgLrvOIvEcHsApboOVHPh1TuEN7OGYgDeP5uOcAIu38868b5Km",
-    alt: "White cream jar on a concrete sculptural base with dramatic shadows",
-  },
-  {
-    slug: "pure-void-cleanser",
-    name: "Pure Void Cleanser",
-    subtitle: "pH Balanced Enzyme Gel",
-    price: "$48.00",
-    size: "200ml",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuAqkqfrTe59-o8tAlBPEV4XO0LfMM1_VNujQdMFnC3RgjLH3i0x9SBXzw6wRV3fuCpiJjnSI0lnxNvFnTsNTtfRz0YyV-1MkHtfom_Z7fgnRPEg476h4OSM-nziKyKa09bu-nzAZuUD-04Y9KKzAywuA8yqqSDEl0mf-Mokr85PZtuFsACQeeywEpaWhyFwq8Nk6liV8r1BW7w_Ly5RZ_-woApiJGgf50QI_SM1C_xDOcYpQxqTLheu2HG7lN32gaQ_FA3dmCfOxNXI",
-    alt: "Liquid cleanser with air bubbles on a cool blue lit surface",
-  },
-  {
-    slug: "horizon-eye-balm",
-    name: "Horizon Eye Balm",
-    subtitle: "Retinol Alternative & Caffeine",
-    price: "$74.00",
-    size: "15ml",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuCK-VwuTLu7iMyUMSzKM0V_fSi0vchbyzJwwFPPl_zjxuV77-Ez_S2iv7B7x0lw8AWDz3v21b6Wxbs5A4QqcE3llKTvomV70hZfHPsHKHLZOsNewcRK0h2y4cF__p7ChKQqsgN81OfVfEy7kH6yEs_xWxSLO7-dbuFzB9e61IKwDWnSe0fd1zkeL7_nQPI1RCGQJSRQj50270hZdPzLwhJ9AQ53oDXILK8sOKyMDBLlQwcceqal4u04vgDeV3c-l7PGIxWJ-zk8Husk",
-    alt: "Small amber eye cream jar next to a geometric acrylic cube",
-  },
-  {
-    slug: "atlas-protocol-kit",
-    name: "The Atlas Protocol Kit",
-    subtitle: "4-Step Essential Discovery Set",
-    price: "$185.00",
-    size: "Set",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuDgW7yjWxxIwkDH3qZ59NRoPvNfFY3bO1Bw_uqfH-_a-h_mDukdHhDevLb9sEM3_plKSpus_F3rBxwINLQADEUTMRjweQUMKMXwyLw60_cSGo7QcUWjWtSQpdK-gUyxmr2vi4UOaMQCtS7DWRVZnyD7NyYmMPIBV7-fXIjUzHiJx2jHJEh8ePMKqShk7pZ7UAOszjKP5q8ivDnoNrkGPCHccn584cJs85nQHXk0ydsi4x1oZXXSqioiqjXkUY_6jiQ5wtQ54UI37nw1",
-    alt: "Minimalist skincare bottles arranged by height on a marble display",
-  },
-];
+export const dynamic = "force-dynamic";
 
-const categories: {
-  label: string;
-  count: number;
-  href?: string;
-  active?: boolean;
-}[] = [
-  { label: "All Products", count: 142, active: true, href: "/skincare" },
-  { label: "Cleansers", count: 18, href: "/shop?category=cleansers" },
-  { label: "Serums & Oils", count: 34, href: "/shop?category=serums-oils" },
-  { label: "Moisturizers", count: 22, href: "/shop?category=moisturizers" },
-  { label: "Face", count: 26, href: "/shop?category=face" },
-  { label: "Eyes", count: 12, href: "/shop?category=eyes" },
-  { label: "Lips", count: 9, href: "/shop?category=lips" },
-];
+const concerns = ["Lip Care", "Tone Care", "Hydration", "Repair", "Daily Use"];
 
-const concerns = ["Hydration", "Anti-Aging", "Blemishes", "Brightness", "Sensitivity"];
+type SortKey = "newest" | "price_asc" | "price_desc";
+type FilterKey = "all" | "treatments" | "lip-care" | "moisturizers";
 
-export default function SkincareePage() {
+function productPrice(product: {
+  variants: Array<{ price: number | string }>;
+  basePrice: number | string;
+}) {
+  return Number(product.variants[0]?.price ?? product.basePrice);
+}
+
+function productMatchesFilter(
+  product: { name: string; shortDescription: string | null },
+  filter: FilterKey
+) {
+  const text = `${product.name} ${product.shortDescription ?? ""}`.toLowerCase();
+  if (filter === "treatments") return /correct|treat|repair|serum/.test(text);
+  if (filter === "lip-care") return /lip|balm/.test(text);
+  if (filter === "moisturizers") return /cream|moistur|lotion/.test(text);
+  return true;
+}
+
+function listingHref(base: string, filter: FilterKey, sort: SortKey) {
+  const q = new URLSearchParams();
+  if (filter !== "all") q.set("filter", filter);
+  if (sort !== "newest") q.set("sort", sort);
+  const suffix = q.toString();
+  return suffix ? `${base}?${suffix}` : base;
+}
+
+export default async function SkincareePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ filter?: string; sort?: string }>;
+}) {
+  const params = await searchParams;
+  const activeFilter: FilterKey =
+    params.filter === "treatments" ||
+    params.filter === "lip-care" ||
+    params.filter === "moisturizers"
+      ? params.filter
+      : "all";
+  const activeSort: SortKey =
+    params.sort === "price_asc" || params.sort === "price_desc" ? params.sort : "newest";
+
+  const mappedCategorySlugs = await getCategorySlugsForRoute("/skincare");
+
+  const products = await prisma.product.findMany({
+    where: {
+      isActive: true,
+      ...(mappedCategorySlugs.length > 0
+        ? { category: { slug: { in: mappedCategorySlugs } } }
+        : {
+            OR: [
+              { category: { slug: { contains: "skin" } } },
+              { category: { name: { contains: "skin", mode: "insensitive" } } },
+              { category: { slug: { contains: "lip" } } },
+              { category: { name: { contains: "lip", mode: "insensitive" } } },
+            ],
+          }),
+    },
+    orderBy: [{ isFeatured: "desc" }, { createdAt: "desc" }],
+    include: {
+      images: { orderBy: { position: "asc" }, take: 1 },
+      variants: {
+        where: { isActive: true },
+        orderBy: { createdAt: "asc" },
+        take: 1,
+      },
+      category: { select: { name: true } },
+    },
+  });
+
+  const categories: {
+    key: FilterKey;
+    label: string;
+    count: number;
+    href?: string;
+    active?: boolean;
+  }[] = [
+    {
+      key: "all",
+      label: "All Products",
+      count: products.length,
+      active: activeFilter === "all",
+      href: listingHref("/skincare", "all", activeSort),
+    },
+    {
+      key: "treatments",
+      label: "Treatments",
+      count: products.filter((p) => /correct|treat|repair|serum/i.test(p.name)).length,
+      active: activeFilter === "treatments",
+      href: listingHref("/skincare", "treatments", activeSort),
+    },
+    {
+      key: "lip-care",
+      label: "Lip Care",
+      count: products.filter((p) => /lip|balm/i.test(p.name)).length,
+      active: activeFilter === "lip-care",
+      href: listingHref("/skincare", "lip-care", activeSort),
+    },
+    {
+      key: "moisturizers",
+      label: "Moisturizers",
+      count: products.filter((p) => /cream|moistur|lotion/i.test(p.name)).length,
+      active: activeFilter === "moisturizers",
+      href: listingHref("/skincare", "moisturizers", activeSort),
+    },
+  ];
+
+  const filteredProducts = products.filter((p) => productMatchesFilter(p, activeFilter));
+  const visibleProducts = [...filteredProducts].sort((a, b) => {
+    if (activeSort === "price_asc") return productPrice(a) - productPrice(b);
+    if (activeSort === "price_desc") return productPrice(b) - productPrice(a);
+    return 0;
+  });
+
   return (
     <>
       <Navbar />
       <main className="pt-24 pb-16 max-w-7xl mx-auto px-8">
+        <div className="mb-8">
+          <DynamicPromoBannerZone zone="category.top" />
+        </div>
         {/* Hero Header */}
         <header className="mb-16">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div className="max-w-2xl">
-              <h1 className="font-headline text-5xl md:text-7xl text-on-surface tracking-tighter leading-tight">
-                Advanced<br />Skincare.
+              <h1 className="font-headline text-4xl md:text-5xl text-on-surface tracking-tight leading-tight">
+                Skin Care
               </h1>
-              <p className="mt-6 text-on-surface-variant font-body text-lg leading-relaxed">
-                A curated collection of professional-grade formulas designed for
-                architectural precision in skin health. Discover the Atlas methodology.
+              <p className="mt-4 text-on-surface-variant font-body text-base leading-relaxed">
+                Simple, effective essentials curated for daily skin health.
               </p>
             </div>
             <div className="flex items-center gap-4 text-xs font-label uppercase tracking-widest text-on-surface-variant">
-              <span>Showing 24 of 142 Results</span>
+              <span>Showing {visibleProducts.length} products</span>
               <div className="h-px w-12 bg-outline-variant" />
-              <button className="flex items-center gap-2 font-bold text-primary">
-                Sort By: Newest{" "}
-                <span className="material-symbols-outlined text-sm">expand_more</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <Link
+                  href={listingHref("/skincare", activeFilter, "newest")}
+                  className={`font-bold ${activeSort === "newest" ? "text-primary" : "text-on-surface-variant"}`}
+                >
+                  Newest
+                </Link>
+                <span>·</span>
+                <Link
+                  href={listingHref("/skincare", activeFilter, "price_asc")}
+                  className={`font-bold ${activeSort === "price_asc" ? "text-primary" : "text-on-surface-variant"}`}
+                >
+                  Price Low
+                </Link>
+                <span>·</span>
+                <Link
+                  href={listingHref("/skincare", activeFilter, "price_desc")}
+                  className={`font-bold ${activeSort === "price_desc" ? "text-primary" : "text-on-surface-variant"}`}
+                >
+                  Price High
+                </Link>
+              </div>
             </div>
           </div>
         </header>
@@ -188,65 +246,46 @@ export default function SkincareePage() {
           {/* Product Grid */}
           <div className="flex-grow">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
-              {products.map((product) => (
-                <Link href={`/products/${product.slug}`} key={product.slug} className="group block">
+              {visibleProducts.map((product) => (
+                <Link href={`/products/${product.slug}`} key={product.id} className="group block">
                   <div className="relative aspect-[3/4] bg-surface-container-low overflow-hidden mb-4">
                     <Image
-                      src={product.image}
-                      alt={product.alt}
+                      src={product.images[0]?.url || "/products/burts-bees-lip-balm.jpg"}
+                      alt={product.images[0]?.altText || product.name}
                       fill
-                      className="object-cover mix-blend-multiply transition-transform duration-700 group-hover:scale-105"
+                      sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 30vw"
+                      className="object-cover transition-transform duration-700 group-hover:scale-105"
                     />
-                    {product.badge && (
-                      <div className={`absolute top-4 left-4 px-3 py-1 text-[10px] font-bold tracking-widest uppercase ${product.badgeStyle}`}>
-                        {product.badge}
+                    {product.isFeatured && (
+                      <div className="absolute top-4 left-4 px-3 py-1 text-[10px] font-bold tracking-widest uppercase bg-primary text-on-primary">
+                        Featured
                       </div>
                     )}
-                    <button className="absolute bottom-4 right-4 w-10 h-10 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
+                    <span className="absolute bottom-4 right-4 w-10 h-10 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
                       <span className="material-symbols-outlined text-primary text-sm">add_shopping_cart</span>
-                    </button>
+                    </span>
                   </div>
                   <h4 className="font-headline text-xl text-on-surface mb-1">{product.name}</h4>
-                  <p className="text-on-surface-variant text-sm mb-3">{product.subtitle}</p>
+                  <p className="text-on-surface-variant text-sm mb-3">
+                    {product.shortDescription || product.category.name}
+                  </p>
                   <div className="flex items-center gap-3">
-                    <span className="text-primary font-bold">{product.price}</span>
+                    <span className="text-primary font-bold">
+                      ${Number(product.variants[0]?.price ?? product.basePrice).toFixed(2)}
+                    </span>
                     <span className="h-px w-4 bg-outline-variant" />
                     <span className="text-[10px] uppercase tracking-tighter text-on-surface-variant font-bold">
-                      {product.size}
+                      {product.variants[0]?.name || "Standard"}
                     </span>
                   </div>
                 </Link>
               ))}
             </div>
 
-            {/* Pagination */}
-            <div className="mt-20 flex justify-center items-center gap-4">
-              <button className="w-10 h-10 rounded-full border border-outline-variant flex items-center justify-center text-on-surface-variant hover:border-primary hover:text-primary transition-all">
-                <span className="material-symbols-outlined">chevron_left</span>
-              </button>
-              <div className="flex items-center gap-2">
-                {[1, 2, 3].map((page) => (
-                  <button
-                    key={page}
-                    className={`w-10 h-10 rounded-full text-sm font-medium transition-colors ${
-                      page === 1
-                        ? "bg-primary text-on-primary font-bold"
-                        : "text-on-surface-variant hover:bg-surface-container"
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ))}
-                <span className="px-2 text-on-surface-variant">...</span>
-                <button className="w-10 h-10 rounded-full text-on-surface-variant font-medium text-sm hover:bg-surface-container transition-colors">
-                  12
-                </button>
-              </div>
-              <button className="w-10 h-10 rounded-full border border-outline-variant flex items-center justify-center text-on-surface-variant hover:border-primary hover:text-primary transition-all">
-                <span className="material-symbols-outlined">chevron_right</span>
-              </button>
-            </div>
           </div>
+        </div>
+        <div className="mt-12">
+          <DynamicPromoBannerZone zone="category.bottom" />
         </div>
       </main>
       <Footer />

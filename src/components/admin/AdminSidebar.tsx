@@ -41,6 +41,7 @@ const navItems: NavItem[] = [
       { label: "Add banner", href: "/admin/coupons/banners/new" },
     ],
   },
+  { icon: "dashboard_customize", label: "Layout", href: "/admin/layout" },
 ];
 
 export default function AdminSidebar() {
