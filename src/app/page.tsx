@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
+import NewsletterSection from "@/components/NewsletterSection";
 import DynamicPromoBannerZone from "@/components/DynamicPromoBannerZone";
 import { getHomepageFeaturedProducts } from "@/lib/homepage-layout";
 import { resolveProductImageUrl } from "@/lib/product-image";
@@ -252,28 +253,7 @@ export default async function Home() {
           </div>
         </section>
 
-        <section className="bg-white px-4 py-16 sm:px-6 md:px-12 md:py-24">
-          <div className="mx-auto max-w-5xl px-1 text-center">
-            <p className="font-body text-xs uppercase tracking-[0.32em] text-outline">
-              Join the atelier
-            </p>
-            <h2 className="mt-4 font-headline text-2xl text-on-surface sm:text-3xl md:text-4xl lg:text-5xl">
-              Receive launches and ritual updates.
-            </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-sm text-on-surface-variant sm:mt-5 sm:text-base">
-              We kept the homepage CTA focused and direct, while preserving your existing
-              cart and catalog navigation.
-            </p>
-            <div className="mt-9">
-              <Link
-                href="/shop"
-                className="inline-flex rounded-full bg-secondary px-10 py-4 font-body text-xs font-semibold uppercase tracking-[0.2em] text-on-secondary transition hover:bg-secondary/90"
-              >
-                Start shopping
-              </Link>
-            </div>
-          </div>
-        </section>
+        <NewsletterSection />
       </main>
       <Footer />
     </>

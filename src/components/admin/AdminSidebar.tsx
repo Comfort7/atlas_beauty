@@ -52,6 +52,7 @@ const navItems: NavItem[] = [
     ],
   },
   { icon: "dashboard_customize", label: "Layout", href: "/admin/layout" },
+  { icon: "mail", label: "Newsletter", href: "/admin/newsletter" },
   { icon: "admin_panel_settings", label: "Staff Access", href: "/admin/staff" },
 ];
 
