@@ -108,9 +108,9 @@ export const cartService = {
     });
   },
 
-  async updateItemQuantity(itemId: string, quantity: number) {
-    const item = await prisma.cartItem.findUnique({
-      where: { id: itemId },
+  async updateItemQuantity(cartId: string, itemId: string, quantity: number) {
+    const item = await prisma.cartItem.findFirst({
+      where: { id: itemId, cartId },
       include: { variant: { include: { inventory: true } } },
     });
 
@@ -132,7 +132,10 @@ export const cartService = {
     });
   },
 
-  async removeItem(itemId: string) {
+  async removeItem(cartId: string, itemId: string) {
+    const item = await prisma.cartItem.findFirst({ where: { id: itemId, cartId } });
+    if (!item) throw new NotFoundError("Cart item");
+
     await prisma.cartItem.delete({ where: { id: itemId } });
   },
 
