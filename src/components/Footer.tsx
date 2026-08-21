@@ -12,7 +12,7 @@ export default function Footer() {
             Atlas Beauty
           </Link>
           <p className="font-body text-[10px] uppercase tracking-widest text-on-surface-variant mt-2">
-            © 2024 Atlas Beauty. All rights reserved.
+            © {new Date().getFullYear()} Atlas Beauty. All rights reserved.
           </p>
         </div>
 
@@ -44,6 +44,11 @@ export default function Footer() {
             </span>
           ))}
         </div>
+      </div>
+      <div className="border-t border-outline-variant/20 py-4">
+        <p className="text-center font-body text-[10px] uppercase tracking-widest text-on-surface-variant/70">
+          Site by Afrobora
+        </p>
       </div>
     </footer>
   );

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Noto_Serif, Manrope } from "next/font/google";
 import SessionProvider from "@/components/SessionProvider";
 import "./globals.css";
@@ -23,6 +23,12 @@ export const metadata: Metadata = {
     "A curated selection of high-performance skincare, blending professional precision with the serenity of nature's finest elements.",
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -36,7 +42,7 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
         />
       </head>
-      <body suppressHydrationWarning>
+      <body className="min-h-dvh overflow-x-hidden antialiased" suppressHydrationWarning>
         <SessionProvider>{children}</SessionProvider>
       </body>
     </html>

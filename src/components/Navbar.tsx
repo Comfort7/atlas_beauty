@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const navLinks = [
   { label: "Collections", href: "/" },
@@ -27,14 +27,31 @@ export default function Navbar() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
 
+  useEffect(() => {
+    if (menuOpen) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = prev;
+      };
+    }
+  }, [menuOpen]);
+
   return (
     <>
-      <nav className="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md border-b border-outline-variant/20">
-        <div className="flex justify-between items-center px-8 py-4 max-w-7xl mx-auto">
+      <nav
+        className={`fixed top-0 left-0 right-0 z-50 w-full max-w-[100vw] min-h-16 sm:min-h-[4.5rem] border-b border-outline-variant/20 ${
+          menuOpen ? "bg-surface shadow-sm" : "bg-surface/80 backdrop-blur-md"
+        }`}
+      >
+        <div className="flex h-full min-h-16 sm:min-h-[4.5rem] justify-between items-center gap-3 px-4 py-3 sm:px-6 sm:py-4 md:px-8 max-w-7xl mx-auto min-w-0">
 
           {/* Left: Logo + Desktop Nav */}
-          <div className="flex items-center gap-10">
-            <Link href="/" className="text-2xl tracking-tighter text-on-surface font-headline">
+          <div className="flex items-center gap-4 min-w-0 md:gap-10">
+            <Link
+              href="/"
+              className="shrink-0 text-lg sm:text-xl md:text-2xl tracking-tighter text-on-surface font-headline truncate"
+            >
               Atlas Beauty
             </Link>
             <div className="hidden md:flex items-center space-x-8">
@@ -58,7 +75,7 @@ export default function Navbar() {
           </div>
 
           {/* Right: Search, Person, Cart, Mobile toggle */}
-          <div className="flex items-center space-x-5">
+          <div className="flex items-center shrink-0 gap-3 sm:space-x-5">
             {/* Search — desktop only */}
             <div className="hidden lg:block relative">
               <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">
@@ -84,13 +101,16 @@ export default function Navbar() {
               </span>
             </Link>
 
-            {/* Mobile hamburger */}
+            {/* Mobile hamburger — stays above dimmed overlay (drawer begins below nav) */}
             <button
-              className="md:hidden hover:text-primary transition-colors text-on-surface-variant ml-1"
-              onClick={() => setMenuOpen(!menuOpen)}
-              aria-label="Toggle menu"
+              type="button"
+              className="md:hidden flex h-10 w-10 items-center justify-center rounded-lg hover:bg-surface-container-high hover:text-primary transition-colors text-on-surface-variant"
+              onClick={() => setMenuOpen((o) => !o)}
+              aria-expanded={menuOpen}
+              aria-controls="mobile-nav-drawer"
+              aria-label={menuOpen ? "Close menu" : "Open menu"}
             >
-              <span className="material-symbols-outlined">
+              <span className="material-symbols-outlined text-2xl">
                 {menuOpen ? "close" : "menu"}
               </span>
             </button>
@@ -98,24 +118,36 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile Drawer */}
+      {/* Mobile drawer: only below the fixed nav (drawer z-40, nav z-50) so bar + hamburger stay visible */}
       {menuOpen && (
-        <div className="fixed inset-0 z-40 flex md:hidden">
-          {/* Backdrop */}
+        <div
+          id="mobile-nav-drawer"
+          className="fixed left-0 right-0 bottom-0 top-16 z-40 flex sm:top-[4.5rem] md:hidden max-w-[100vw]"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Site navigation"
+        >
+          {/* Backdrop — does not cover navbar */}
           <div
-            className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
             onClick={() => setMenuOpen(false)}
+            aria-hidden
           />
           {/* Panel */}
-          <div className="relative ml-auto w-72 h-full bg-surface shadow-2xl flex flex-col">
+          <div className="relative ml-auto w-[min(20rem,85vw)] h-full max-h-full bg-surface shadow-2xl flex flex-col border-l border-outline-variant/20">
             <div className="flex items-center justify-between px-6 py-5 border-b border-outline-variant/20">
               <span className="font-headline text-xl tracking-tighter text-on-surface">Atlas Beauty</span>
-              <button onClick={() => setMenuOpen(false)} className="text-on-surface-variant hover:text-primary transition-colors">
+              <button
+                type="button"
+                onClick={() => setMenuOpen(false)}
+                className="text-on-surface-variant hover:text-primary transition-colors"
+                aria-label="Close menu"
+              >
                 <span className="material-symbols-outlined">close</span>
               </button>
             </div>
 
-            <nav className="flex-1 py-6 px-4 space-y-1 overflow-y-auto">
+            <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto overscroll-contain">
               {mobileLinks.map(({ label, href, icon }) => {
                 const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
                 return (

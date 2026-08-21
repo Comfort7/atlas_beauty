@@ -12,7 +12,7 @@ import {
 } from "@/lib/homepage-layout";
 
 const updateSchema = z.object({
-  featuredProductIds: z.array(z.string().min(1)).max(8),
+  featuredProductIds: z.array(z.string().min(1)).max(10),
   categoryRouteMap: z.record(z.string(), z.enum(ADMIN_CATEGORY_ROUTE_OPTIONS)).default({}),
   bannerZoneMap: z.record(z.string(), z.enum(ADMIN_BANNER_ZONE_SOURCE_OPTIONS)).default({}),
 });

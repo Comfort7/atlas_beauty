@@ -17,6 +17,8 @@ type CategoryItem = {
   slug: string;
 };
 
+const MAX_HOMEPAGE_FEATURED = 10;
+
 type LayoutResponse = {
   featuredProductIds: string[];
   categoryRouteMap: Record<string, string>;
@@ -95,7 +97,7 @@ export default function AdminHomepageLayoutPage() {
         const data = body.data as LayoutResponse;
         if (!mounted) return;
         setProducts(data.products || []);
-        setSelectedIds((data.featuredProductIds || []).slice(0, 8));
+        setSelectedIds((data.featuredProductIds || []).slice(0, MAX_HOMEPAGE_FEATURED));
         setCategories(data.categories || []);
         setCategoryRouteMap(data.categoryRouteMap || {});
         setRouteOptions(data.routeOptions || []);
@@ -127,7 +129,7 @@ export default function AdminHomepageLayoutPage() {
     setSuccess("");
     setSelectedIds((prev) => {
       if (prev.includes(id)) return prev.filter((x) => x !== id);
-      if (prev.length >= 8) return prev;
+      if (prev.length >= MAX_HOMEPAGE_FEATURED) return prev;
       return [...prev, id];
     });
   }
@@ -193,7 +195,7 @@ export default function AdminHomepageLayoutPage() {
         <div>
           <h1 className="font-headline text-2xl text-on-surface">Homepage Layout</h1>
           <p className="text-xs text-on-surface-variant uppercase tracking-widest mt-0.5">
-            Select and order the first 8 landing products
+            Select and order the first {MAX_HOMEPAGE_FEATURED} landing products
           </p>
         </div>
         <button
@@ -223,7 +225,9 @@ export default function AdminHomepageLayoutPage() {
           <>
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
               <section className="bg-surface rounded-xl border border-outline-variant/20 p-6">
-                <h2 className="font-headline text-lg mb-4">Selected ({selectedIds.length}/8)</h2>
+                <h2 className="font-headline text-lg mb-4">
+                  Selected ({selectedIds.length}/{MAX_HOMEPAGE_FEATURED})
+                </h2>
                 {selectedProducts.length === 0 ? (
                   <p className="text-sm text-on-surface-variant">No products selected yet.</p>
                 ) : (
@@ -275,7 +279,7 @@ export default function AdminHomepageLayoutPage() {
                 <div className="space-y-2 max-h-[620px] overflow-y-auto pr-1">
                   {products.map((product) => {
                     const checked = selectedIds.includes(product.id);
-                    const blocked = !checked && selectedIds.length >= 8;
+                    const blocked = !checked && selectedIds.length >= MAX_HOMEPAGE_FEATURED;
                     const price = Number(product.variants[0]?.price ?? product.basePrice).toFixed(2);
                     return (
                       <label
