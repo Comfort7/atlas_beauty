@@ -22,6 +22,16 @@ const navItems: NavItem[] = [
   { icon: "warehouse", label: "Inventory", href: "/admin/inventory" },
   { icon: "receipt_long", label: "Orders", href: "/admin/orders" },
   { icon: "group", label: "Customers", href: "/admin/customers" },
+  { icon: "rate_review", label: "Reviews", href: "/admin/reviews" },
+  {
+    icon: "sell",
+    label: "Catalog",
+    href: "/admin/brands",
+    children: [
+      { label: "Brands", href: "/admin/brands" },
+      { label: "Categories", href: "/admin/categories" },
+    ],
+  },
   {
     icon: "article",
     label: "Blog",
@@ -42,28 +52,28 @@ const navItems: NavItem[] = [
     ],
   },
   { icon: "dashboard_customize", label: "Layout", href: "/admin/layout" },
+  { icon: "admin_panel_settings", label: "Staff Access", href: "/admin/staff" },
 ];
 
 export default function AdminSidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const [collapsed, setCollapsed] = useState(false);
+  function itemMatches(item: NavItem) {
+    if (item.href === "/admin") return pathname === "/admin";
+    if (pathname.startsWith(item.href)) return true;
+    return Boolean(item.children?.some((child) => pathname.startsWith(child.href)));
+  }
+
   const [openMenus, setOpenMenus] = useState<string[]>(() => {
     // Auto-open the submenu for the active section
-    return navItems
-      .filter((item) => item.children && pathname.startsWith(item.href))
-      .map((item) => item.label);
+    return navItems.filter((item) => item.children && itemMatches(item)).map((item) => item.label);
   });
 
   function toggleMenu(label: string) {
     setOpenMenus((prev) =>
       prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label]
     );
-  }
-
-  function isActive(href: string) {
-    if (href === "/admin") return pathname === "/admin";
-    return pathname.startsWith(href);
   }
 
   return (
@@ -94,7 +104,7 @@ export default function AdminSidebar() {
       {/* Nav */}
       <nav className="flex-1 py-4 space-y-0.5 px-2 overflow-y-auto">
         {navItems.map((item) => {
-          const active = isActive(item.href);
+          const active = itemMatches(item);
           const menuOpen = openMenus.includes(item.label);
 
           return (

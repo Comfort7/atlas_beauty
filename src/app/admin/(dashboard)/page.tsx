@@ -251,7 +251,7 @@ export default async function AdminDashboardPage() {
                         className="hover:bg-surface-container-low transition-colors"
                       >
                         <td className="px-6 py-4 text-sm font-bold text-primary font-body">
-                          <Link href={`/admin/orders`} className="hover:underline">
+                          <Link href={`/admin/orders/${order.id}`} className="hover:underline">
                             #{order.orderNumber}
                           </Link>
                         </td>

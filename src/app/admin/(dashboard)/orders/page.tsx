@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { OrderStatus } from "@prisma/client";
 
@@ -87,9 +88,14 @@ export default async function AdminOrdersPage() {
                 </thead>
                 <tbody className="divide-y divide-outline-variant/10">
                   {orders.map((order) => (
-                    <tr key={order.id} className="hover:bg-surface-container-low/50 transition-colors">
+                    <tr
+                      key={order.id}
+                      className="hover:bg-surface-container-low/50 transition-colors cursor-pointer"
+                    >
                       <td className="px-6 py-4 text-sm font-bold text-primary font-mono">
-                        #{order.orderNumber}
+                        <Link href={`/admin/orders/${order.id}`} className="hover:underline">
+                          #{order.orderNumber}
+                        </Link>
                       </td>
                       <td className="px-6 py-4">
                         <p className="text-sm font-bold text-on-surface">{order.user.name || "—"}</p>

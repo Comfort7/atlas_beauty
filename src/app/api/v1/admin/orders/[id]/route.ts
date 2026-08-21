@@ -16,6 +16,17 @@ const updateOrderStatusSchema = z.object({
   ]),
 });
 
+// GET /api/v1/admin/orders/:id
+export const GET = withAdmin(async (_request, context) => {
+  try {
+    const { id } = await context.params;
+    const order = await orderService.getById(id);
+    return successResponse(order);
+  } catch (error) {
+    return handleError(error);
+  }
+});
+
 // PATCH /api/v1/admin/orders/:id - Update order status
 export const PATCH = withAdmin(async (request, context) => {
   try {
